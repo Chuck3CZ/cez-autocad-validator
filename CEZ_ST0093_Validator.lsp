@@ -495,7 +495,7 @@
 (setq *cez-typ-priklady* (list "H16T" "H16S" "PPPt" "PPPs" "H01T" "H01S" "EDST" "EDSS"))
 
 (defun cez-check-titleblock (fix-p / ramecek-list pole-list ins attrs archc lokalita nazev1 ktd stupen cislo-akce datum
-                              archc-clean n-problems val pair so-dps typ-val)
+                              archc-clean n-problems val pair so-dps typ-val bname pole-plne-p povinna-pole)
   (cez-log "\n=== 4) KONTROLA RAMECKU A POPISOVEHO POLE ===")
   (setq ramecek-list (cez-collect-inserts-by-name (list "Ramecek" "R\U+00E1me\U+010Dek" "A0" "A0-1" "A0-2" "A1" "A1.0" "A1-2"
                                                           "A1-3" "A1-4" "A2" "A2.0" "A2.1" "A2-3" "A2-4" "A2-5" "A2-6"
@@ -517,7 +517,19 @@
       (foreach ins pole-list
         (setq attrs (cez-read-attribs ins))
         (setq n-problems 0)
-        (cez-log (strcat "  -- popisove pole nalezeno na: " (cez-entity-loc-str ins) " --"))
+        ;; Zjisti typ popisoveho pole - dle VP C (Zasady provedeni dokumentu,
+        ;; Vicelisty dokument) se PLNE popisove pole (vsechny udaje) pouziva
+        ;; JEN na titulnim listu (bloky Pole-1r/Pole-1z). Na dalsich listech
+        ;; se pouziva jen zjednoduseny blok Pole-2/Pole-3, ktery STRUKTURALNE
+        ;; neobsahuje atributy jako CISLO_AKCE, STUPEN_PD, SO_DPS, DATUM,
+        ;; TYP/PODTYP, POR_C, MERITKO, SCHVALIL apod. - to je ZAMER metodiky,
+        ;; ne chyba vykresu. Kontrola proto tyto atributy vyzaduje jen na
+        ;; Pole-1r/Pole-1z, u Pole-2/Pole-3 se rovnou preskakuji.
+        (setq bname (strcase (cdr (assoc 2 (entget ins)))))
+        (setq pole-plne-p (member bname (list "POLE-1R" "POLE-1Z")))
+        (cez-log (strcat "  -- popisove pole (" bname ", "
+                          (if pole-plne-p "titulni list, plne pole" "pokracovaci list, zjednodusene pole")
+                          ") nalezeno na: " (cez-entity-loc-str ins) " --"))
 
         ;; ARCH_C - dodavatelske cislo: max 15 znaku, jen A-Z 0-9 - / .
         (setq archc (cez-attr-get attrs "ARCH_C"))
@@ -562,10 +574,21 @@
           )
         )
 
-        ;; Povinna nazev/KTD/cislo akce/stupen PD - jen kontrola prazdnoty
-        (foreach pair (list (cons "NAZEV_1" "Nazev vykresu") (cons "KTD" "Kod tridy dokumentu")
-                             (cons "\U+010CISLO_AKCE" "Cislo akce") (cons "STUPE\U+0147_PD" "Stupen PD")
-                             (cons "VYPRACOVAL" "Vypracoval"))
+        ;; Povinna pole - jen kontrola prazdnoty. Rozsah povinnych poli zavisi
+        ;; na typu bloku (viz pole-plne-p vyse): CISLO_AKCE a STUPEN_PD
+        ;; strukturalne existuji jen v Pole-1r/Pole-1z (titulni list) - na
+        ;; Pole-2/Pole-3 (pokracovaci listy) je VP C vubec nevyzaduje/
+        ;; neobsahuje, proto se tam nekontroluji (byla by to falesna chyba).
+        (setq povinna-pole
+          (if pole-plne-p
+            (list (cons "NAZEV_1" "Nazev vykresu") (cons "KTD" "Kod tridy dokumentu")
+                  (cons "\U+010CISLO_AKCE" "Cislo akce") (cons "STUPE\U+0147_PD" "Stupen PD")
+                  (cons "VYPRACOVAL" "Vypracoval"))
+            (list (cons "NAZEV_1" "Nazev vykresu") (cons "KTD" "Kod tridy dokumentu")
+                  (cons "VYPRACOVAL" "Vypracoval"))
+          )
+        )
+        (foreach pair povinna-pole
           (setq val (cez-attr-get attrs (car pair)))
           (if (or (null val) (= (cez-str-nospace val) ""))
             (progn (setq n-problems (1+ n-problems))
@@ -573,50 +596,67 @@
           )
         )
 
-        ;; DATUM - format dd.mm.rrrr
-        (setq datum (cez-attr-get attrs "DATUM"))
-        (if (and datum (/= datum ""))
-          (if (wcmatch datum "##.##.####")
-            (cez-ok (strcat "DATUM = '" datum "' OK."))
-            (progn (setq n-problems (1+ n-problems))
-                   (cez-warn (strcat "DATUM = '" datum "' neodpovida formatu dd.mm.rrrr.")))
+        ;; Nasledujici atributy (DATUM, SO_DPS, CISLO_AKCE, TYP) STRUKTURALNE
+        ;; existuji jen v blocich Pole-1r/Pole-1z (titulni list) - VP C je na
+        ;; Pole-2/Pole-3 (pokracovaci listy) vubec nepredepisuje/neobsahuje,
+        ;; proto se kontroluji jen kdyz pole-plne-p je pravda.
+        (if pole-plne-p
+          (progn
+            ;; DATUM - format dd.mm.rrrr
+            (setq datum (cez-attr-get attrs "DATUM"))
+            (if (and datum (/= datum ""))
+              (if (wcmatch datum "##.##.####")
+                (cez-ok (strcat "DATUM = '" datum "' OK."))
+                (progn (setq n-problems (1+ n-problems))
+                       (cez-warn (strcat "DATUM = '" datum "' neodpovida formatu dd.mm.rrrr.")))
+              )
+            )
+
+            ;; SO_DPS - max. 12 znaku dle VP C kap. 5.1.1
+            (setq so-dps (cez-attr-get attrs "SO_DPS"))
+            (if (and so-dps (> (strlen so-dps) 12))
+              (progn (setq n-problems (1+ n-problems))
+                     (cez-warn (strcat "Pole SO_DPS = '" so-dps "' ma " (itoa (strlen so-dps))
+                                        " znaku, max. povoleno je 12 (VP C kap. 5.1.1).")))
+            )
+
+            ;; Cislo akce - format zavisi na lokalite (VP C kap. 5.1.1):
+            ;; EDU = ctyrmistne cislo (napr. 7709), ETE = pismeno + trimistne cislo (napr. B633)
+            (setq cislo-akce (cez-attr-get attrs "\U+010CISLO_AKCE"))
+            (if (and cislo-akce (/= cislo-akce "") lokalita)
+              (cond
+                ((cez-lokalita-edu-p lokalita)
+                  (if (and (= (strlen cislo-akce) 4) (cez-digits-p cislo-akce))
+                    (cez-ok (strcat "\U+010CISLO_AKCE = '" cislo-akce "' OK (EDU, ctyrmistne cislo)."))
+                    (progn (setq n-problems (1+ n-problems))
+                           (cez-warn (strcat "\U+010CISLO_AKCE = '" cislo-akce "' neodpovida formatu pro EDU "
+                                              "(ma byt ctyrmistne cislo, napr. 7709) dle VP C kap. 5.1.1.")))
+                  )
+                )
+                ((cez-lokalita-ete-p lokalita)
+                  (if (and (= (strlen cislo-akce) 4) (cez-alpha-p (substr cislo-akce 1 1))
+                           (cez-digits-p (substr cislo-akce 2 3)))
+                    (cez-ok (strcat "\U+010CISLO_AKCE = '" cislo-akce "' OK (ETE, pismeno+trimistne cislo)."))
+                    (progn (setq n-problems (1+ n-problems))
+                           (cez-warn (strcat "\U+010CISLO_AKCE = '" cislo-akce "' neodpovida formatu pro ETE "
+                                              "(ma byt 1 pismeno + trimistne cislo, napr. B633) dle VP C kap. 5.1.1.")))
+                  )
+                )
+              )
+            )
+
+            ;; TYP - jen informativni porovnani se znamymi priklady z VP C kap. 5.1.1
+            (setq typ-val (cez-attr-get attrs "TYP"))
+            (if (and typ-val (/= typ-val "") (not (member typ-val *cez-typ-priklady*)))
+              (cez-log (strcat "  [INFO]   Pole TYP = '" typ-val "' neni v prikladech VP C kap. 5.1.1 "
+                                "(H16T/H16S/PPPt/PPPs/H01T/H01S/EDST/EDSS) - overit rucne proti volne priloze A "
+                                "(plny ciselnik typu nemam k dispozici)."))
+            )
           )
         )
 
-        ;; SO_DPS - max. 12 znaku dle VP C kap. 5.1.1
-        (setq so-dps (cez-attr-get attrs "SO_DPS"))
-        (if (and so-dps (> (strlen so-dps) 12))
-          (progn (setq n-problems (1+ n-problems))
-                 (cez-warn (strcat "Pole SO_DPS = '" so-dps "' ma " (itoa (strlen so-dps))
-                                    " znaku, max. povoleno je 12 (VP C kap. 5.1.1).")))
-        )
-
-        ;; Cislo akce - format zavisi na lokalite (VP C kap. 5.1.1):
-        ;; EDU = ctyrmistne cislo (napr. 7709), ETE = pismeno + trimistne cislo (napr. B633)
-        (setq cislo-akce (cez-attr-get attrs "\U+010CISLO_AKCE"))
-        (if (and cislo-akce (/= cislo-akce "") lokalita)
-          (cond
-            ((cez-lokalita-edu-p lokalita)
-              (if (and (= (strlen cislo-akce) 4) (cez-digits-p cislo-akce))
-                (cez-ok (strcat "\U+010CISLO_AKCE = '" cislo-akce "' OK (EDU, ctyrmistne cislo)."))
-                (progn (setq n-problems (1+ n-problems))
-                       (cez-warn (strcat "\U+010CISLO_AKCE = '" cislo-akce "' neodpovida formatu pro EDU "
-                                          "(ma byt ctyrmistne cislo, napr. 7709) dle VP C kap. 5.1.1.")))
-              )
-            )
-            ((cez-lokalita-ete-p lokalita)
-              (if (and (= (strlen cislo-akce) 4) (cez-alpha-p (substr cislo-akce 1 1))
-                       (cez-digits-p (substr cislo-akce 2 3)))
-                (cez-ok (strcat "\U+010CISLO_AKCE = '" cislo-akce "' OK (ETE, pismeno+trimistne cislo)."))
-                (progn (setq n-problems (1+ n-problems))
-                       (cez-warn (strcat "\U+010CISLO_AKCE = '" cislo-akce "' neodpovida formatu pro ETE "
-                                          "(ma byt 1 pismeno + trimistne cislo, napr. B633) dle VP C kap. 5.1.1.")))
-              )
-            )
-          )
-        )
-
-        ;; KTD - kod tridy dokumentu: 4 znaky, velka pismena/cislice (napr. DD04, EC05)
+        ;; KTD - kod tridy dokumentu: 4 znaky, velka pismena/cislice (napr. DD04, EC05).
+        ;; Existuje na VSECH ctyrech blocich (Pole-1r/1z i Pole-2/3), kontroluje se vzdy.
         (setq ktd (cez-attr-get attrs "KTD"))
         (if (and ktd (/= ktd ""))
           (if (= (strlen ktd) 4)
@@ -625,14 +665,6 @@
                    (cez-warn (strcat "KTD = '" ktd "' nema 4 znaky, jak predepisuje VP A/VP C "
                                       "(napr. DD04, EC05, QC29).")))
           )
-        )
-
-        ;; TYP - jen informativni porovnani se znamymi priklady z VP C kap. 5.1.1
-        (setq typ-val (cez-attr-get attrs "TYP"))
-        (if (and typ-val (/= typ-val "") (not (member typ-val *cez-typ-priklady*)))
-          (cez-log (strcat "  [INFO]   Pole TYP = '" typ-val "' neni v prikladech VP C kap. 5.1.1 "
-                            "(H16T/H16S/PPPt/PPPs/H01T/H01S/EDST/EDSS) - overit rucne proti volne priloze A "
-                            "(plny ciselnik typu nemam k dispozici)."))
         )
 
         (if (= n-problems 0) (cez-ok "Popisove pole bez zjistenych problemu."))

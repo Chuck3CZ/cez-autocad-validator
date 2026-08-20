@@ -47,20 +47,38 @@ dodavatele JE (ETE/EDU)**, konkrétně:
    `STANDARD`) používají, a u těch už uvede umístění – viz bod "Umístění
    nálezů" níže.
 4. **Rámeček a popisové pole** – přítomnost bloku formátu (A0–A4, TL-A3,
-   TL-A4) a bloku popisového pole (`Pole-1r`/`Pole-1z`/`Pole-2`/`Pole-3`),
-   a v něm:
+   TL-A4) a bloku popisového pole (`Pole-1r`/`Pole-1z`/`Pole-2`/`Pole-3`).
+
+   **Titulní list vs. pokračovací listy (důležité):** dle VP C (kap.
+   "Zásady provedení dokumentu" → "Vícelistý dokument") se **plné**
+   popisové pole se všemi údaji používá **jen na titulním listu**
+   (bloky `Pole-1r`/`Pole-1z`). Na dalších listech vícelistého dokumentu
+   se používá **jen** zjednodušený blok `Pole-2`/`Pole-3`, který
+   **strukturálně neobsahuje** atributy `ČÍSLO_AKCE`, `STUPEŇ_PD`,
+   `SO_DPS`, `DATUM`, `TYP`/`PODTYP`, `POŘ. Č.`, `MĚŘÍTKO`, `SCHVÁLIL`
+   ani rezervní pole – to je **záměr metodiky**, ne chyba výkresu. Pokud
+   tedy váš výkres má na 2. a dalších listech jen razítko firmy, název,
+   soubor, vypracoval/kontroloval, arch. č., list a index, je to
+   **v pořádku**. Kontrola proto rozlišuje typ nalezeného bloku a níže
+   uvedené kontroly aplikuje jen tam, kde daný atribut vůbec existuje:
    - **ARCH_C** (dodavatelské číslo) – max. 15 znaků, jen `A-Z 0-9 - / .`
-     dle kap. 3.1.4 standardu
+     dle kap. 3.1.4 standardu (na obou typech bloku)
    - **LOKALITA** – musí být EDU/JE Dukovany/Dukovany/ETE/JE Temelín/Temelín
-   - **DATUM** – formát `dd.mm.rrrr`
-   - **SO_DPS** – max. 12 znaků (VP C kap. 5.1.1)
-   - **ČÍSLO_AKCE** – formát podle lokality: EDU = čtyřmístné číslo
-     (např. `7709`), ETE = písmeno + trojmístné číslo (např. `B633`)
-   - **KTD** (kód třídy dokumentu) – musí mít 4 znaky (např. `DD04`)
-   - **TYP** – informativní porovnání se známými příklady z VP C
-     (`H16T`/`H16S`/`PPPt`/`PPPs`/`H01T`/`H01S`/`EDST`/`EDSS`); úplný
-     číselník je ve volné příloze A, kterou nemám k dispozici, takže se
-     neshoda jen vypíše jako info, ne jako chyba
+     (na obou typech bloku)
+   - **KTD** (kód třídy dokumentu) – musí mít 4 znaky, např. `DD04` (na
+     obou typech bloku – `KTD` je jediný "obsahový" atribut, který mají
+     `Pole-2`/`Pole-3` společný s `Pole-1r`/`Pole-1z`)
+   - **NAZEV_1, VYPRACOVAL** – nesmí být prázdné (na obou typech bloku)
+   - _pouze na titulním listu (`Pole-1r`/`Pole-1z`):_
+     - **DATUM** – formát `dd.mm.rrrr`
+     - **SO_DPS** – max. 12 znaků (VP C kap. 5.1.1)
+     - **ČÍSLO_AKCE** – formát podle lokality: EDU = čtyřmístné číslo
+       (např. `7709`), ETE = písmeno + trojmístné číslo (např. `B633`)
+     - **STUPEŇ_PD** – nesmí být prázdné
+     - **TYP** – informativní porovnání se známými příklady z VP C
+       (`H16T`/`H16S`/`PPPt`/`PPPs`/`H01T`/`H01S`/`EDST`/`EDSS`); úplný
+       číselník je ve volné příloze A, kterou nemám k dispozici, takže se
+       neshoda jen vypíše jako info, ne jako chyba
    - vyplnění povinných polí (NAZEV_1, KTD, ČÍSLO_AKCE, STUPEŇ_PD, VYPRACOVAL)
 5. **Barvy, čárové typy a tloušťky čar přímo na entitách** (ne ByLayer) –
    CEZ metodika přiřazuje tloušťku čáry při tisku podle **barvy** objektu
@@ -255,6 +273,16 @@ pak `CEZ-OPRAVA`).
   závislých.
 
 ## Opravy (changelog)
+
+- **Oprava falešných chyb na pokračovacích listech (Pole-2/Pole-3):**
+  kontrola popisového pole dřív vyžadovala vyplnění `ČÍSLO_AKCE` a
+  `STUPEŇ_PD` na *všech* nalezených popisových polích, včetně bloků
+  `Pole-2`/`Pole-3`, které tyto atributy vůbec strukturálně neobsahují
+  (existují jen v `Pole-1r`/`Pole-1z`) – to hlásilo "pole je prázdné" i na
+  zcela správně vyplněných pokračovacích listech. Kontrola teď nejdřív
+  podle názvu nalezeného bloku pozná, jde-li o titulní list (plné pole)
+  nebo pokračovací list (zjednodušené pole), a atributy, které daný typ
+  bloku vůbec nemá, se přeskakují. Viz upřesnění v bodě 4 výše.
 
 - **Umístění nálezů (souřadnice) v hlášeních:** přidána funkce
   `cez-entity-loc-str`, která ke každému nálezu u konkrétní entity (bod 3
