@@ -62,6 +62,13 @@
 ;;                    radky a ulozi do textoveho souboru vedle vykresu
 ;;   CEZ-OPRAVA     - jako kontrola, navic se pokusi bezpecne opravit to, co
 ;;                    lze opravit automaticky beze ztraty dat (viz nize)
+;;   CEZ-VERZE      - zjisti a vypise mistni verzi vs. nejnovejsi verzi na
+;;                    GitHubu (jen cte, nic nemeni) - vyzaduje AutoCAD pro
+;;                    Windows a pripojeni k internetu
+;;   CEZ-UPDATE     - stahne nejnovejsi verzi z GitHubu (Chuck3CZ/
+;;                    cez-autocad-validator) a prepise mistni soubory -
+;;                    viz sekce 8 nize a README.md ("Automaticke nacitani
+;;                    a aktualizace")
 ;;
 ;; Co se OPRAVUJE automaticky (CEZ-OPRAVA):
 ;;   - hladina existujici v oficialni tabulce, ale s jinou barvou/carovym
@@ -138,6 +145,11 @@
 
 ;; Zajisti nacteni Visual LISP rozsireni (vl-string-search, vl-filename-base...)
 (vl-load-com)
+
+;; Verze tohoto nastroje a umisteni na GitHubu (pro CEZ-VERZE / CEZ-UPDATE)
+(setq *cez-validator-version* "1.2.0")
+(setq *cez-github-repo* "Chuck3CZ/cez-autocad-validator")
+(setq *cez-github-branch* "main")
 
 ;; Globalni pocitadlo radku [POZOR] pro aktualni beh CEZ-KONTROLA/CEZ-OPRAVA
 ;; (resetuje se na zacatku cez-run)
@@ -1469,8 +1481,148 @@
   )
 )
 
+;; ----------------------------------------------------------------------
+;; 8) Auto-update z GitHubu (CEZ-VERZE / CEZ-UPDATE)
+;;
+;; Pouziva ActiveX/COM objekt MSXML2.ServerXMLHTTP.6.0 (soucast Windows,
+;; funguje jen na AutoCADu pro Windows - NE na AutoCADu pro Mac, ktery COM
+;; automatizaci nepodporuje) k provedeni synchronniho HTTPS GET pozadavku
+;; na "raw" verzi souboru primo z GitHub repozitare
+;; https://github.com/Chuck3CZ/cez-autocad-validator, bez nutnosti
+;; instalovat cokoli navic (git, curl...). Stazeny obsah se zapise na misto
+;; aktualne pouzivaneho lokalniho souboru (dle Support File Search Path) a
+;; znovu nacte.
+;;
+;; POZOR: tato cast nebyla odzkousena v realnem AutoCADu (viz POZOR na
+;; zacatku souboru) - synchronni COM volani na MSXML2.ServerXMLHTTP.6.0 je
+;; dobre zdokumentovana a bezne pouzivana technika v AutoLISPu, ale over
+;; prosim funkcnost nejdriv na CEZ-VERZE (jen cte, nic nemeni), az pak
+;; pouzij CEZ-UPDATE (prepisuje mistni soubory).
+;; ----------------------------------------------------------------------
+
+;; Provede synchronni HTTPS GET na danou URL a vrati obsah jako retezec,
+;; nebo nil pri jakekoli chybe (spatne pripojeni, HTTP chyba apod.)
+(defun cez-http-get (url / http res txt)
+  (setq txt nil)
+  (setq res
+    (vl-catch-all-apply
+      (function
+        (lambda ()
+          (setq http (vlax-create-object "MSXML2.ServerXMLHTTP.6.0"))
+          (vlax-invoke http 'Open "GET" url :vlax-false)
+          (vlax-invoke http 'setRequestHeader "Cache-Control" "no-cache")
+          (vlax-invoke http 'Send)
+          (if (= (vlax-get-property http 'Status) 200)
+            (setq txt (vlax-get-property http 'ResponseText))
+          )
+          (vlax-release-object http)
+        )
+      )
+    )
+  )
+  (if (vl-catch-all-error-p res)
+    (progn (princ (strcat "\n[CEZ] Chyba pri stahovani z '" url "': "
+                           (vl-catch-all-error-message res)))
+           nil)
+    txt
+  )
+)
+
+;; Vytahne hodnotu *cez-validator-version* z textoveho obsahu .lsp souboru
+;; (aniz by se soubor musel nacitat/spoustet) - hleda radek se vzorem
+;; (setq *cez-validator-version* "X.Y.Z")
+(defun cez-extract-version (content / pos1 pos2 marker)
+  (setq marker "(setq *cez-validator-version* \"")
+  (setq pos1 (vl-string-search marker content))
+  (if pos1
+    (progn
+      (setq pos1 (+ pos1 (strlen marker)))
+      (setq pos2 (vl-string-search "\"" content pos1))
+      (if pos2 (substr content (1+ pos1) (- pos2 pos1)) nil)
+    )
+    nil
+  )
+)
+
+(defun c:CEZ-VERZE ( / base remote-content remote-ver)
+  (princ (strcat "\n[CEZ] Mistni verze: " *cez-validator-version*))
+  (setq base (strcat "https://raw.githubusercontent.com/" *cez-github-repo* "/"
+                      *cez-github-branch* "/CEZ_ST0093_Validator.lsp"))
+  (princ "\n[CEZ] Zjistuji nejnovejsi verzi na GitHubu...")
+  (setq remote-content (cez-http-get base))
+  (if remote-content
+    (progn
+      (setq remote-ver (cez-extract-version remote-content))
+      (if remote-ver
+        (if (= remote-ver *cez-validator-version*)
+          (princ (strcat "\n[CEZ] Mas nejnovejsi verzi (" remote-ver ")."))
+          (princ (strcat "\n[CEZ] K dispozici je nova verze " remote-ver
+                          " (mistni: " *cez-validator-version* "). Spust CEZ-UPDATE pro aktualizaci."))
+        )
+        (princ "\n[CEZ] Verzi na GitHubu se nepodarilo zjistit (neocekavany obsah souboru).")
+      )
+    )
+    (princ "\n[CEZ] Nepodarilo se pripojit ke GitHubu (zkontroluj pripojeni k internetu/firewall/proxy).")
+  )
+  (princ)
+)
+
+(defun c:CEZ-UPDATE ( / base-main base-data content-main content-data
+                       local-main local-data f old-ver new-ver)
+  (setq base-main (strcat "https://raw.githubusercontent.com/" *cez-github-repo* "/"
+                           *cez-github-branch* "/CEZ_ST0093_Validator.lsp"))
+  (setq base-data (strcat "https://raw.githubusercontent.com/" *cez-github-repo* "/"
+                           *cez-github-branch* "/CEZ_LAYERS_DATA.lsp"))
+  ;; Mistni cesty - tam, odkud je soubor prave nacteny (Support File Search Path)
+  (setq local-main (findfile "CEZ_ST0093_Validator.lsp"))
+  (setq local-data (findfile "CEZ_LAYERS_DATA.lsp"))
+  (if (not local-main)
+    (princ "\n[CEZ] CHYBA: CEZ_ST0093_Validator.lsp nenalezen na Support File Search Path - aktualizace preskocena.")
+    (progn
+      (setq old-ver *cez-validator-version*)
+      (princ "\n[CEZ] Stahuji CEZ_ST0093_Validator.lsp z GitHubu...")
+      (setq content-main (cez-http-get base-main))
+      (princ "\n[CEZ] Stahuji CEZ_LAYERS_DATA.lsp z GitHubu...")
+      (setq content-data (cez-http-get base-data))
+      (cond
+        ((not content-main)
+          (princ "\n[CEZ] Stazeni CEZ_ST0093_Validator.lsp selhalo - aktualizace preskocena."))
+        ((not content-data)
+          (princ "\n[CEZ] Stazeni CEZ_LAYERS_DATA.lsp selhalo - aktualizace preskocena."))
+        (t
+          (setq f (open local-main "w"))
+          (write-line content-main f)
+          (close f)
+          (if local-data
+            (progn
+              (setq f (open local-data "w"))
+              (write-line content-data f)
+              (close f)
+            )
+            (princ "\n[CEZ] POZOR: CEZ_LAYERS_DATA.lsp nebyl nalezen na Support File Search Path - obsah stazen, ale neni jasne kam ulozit; ulozeno vedle CEZ_ST0093_Validator.lsp.")
+          )
+          (if (not local-data)
+            (progn
+              (setq local-data (strcat (vl-filename-directory local-main) "\\CEZ_LAYERS_DATA.lsp"))
+              (setq f (open local-data "w"))
+              (write-line content-data f)
+              (close f)
+            )
+          )
+          (princ "\n[CEZ] Soubory aktualizovany, nacitam novou verzi...")
+          (load local-main)
+          (setq new-ver *cez-validator-version*)
+          (princ (strcat "\n[CEZ] Hotovo. Verze " old-ver " -> " new-ver "."))
+        )
+      )
+    )
+  )
+  (princ)
+)
+
 (defun c:CEZ-KONTROLA ( / ) (cez-run nil) (princ))
 (defun c:CEZ-OPRAVA ( / ) (cez-run T) (princ))
 
-(princ "\n[CEZ] Nacten validator/opravator CEZ_ST_0093 - prikazy: CEZ-KONTROLA, CEZ-OPRAVA")
+(princ (strcat "\n[CEZ] Nacten validator/opravator CEZ_ST_0093 v" *cez-validator-version*
+               " - prikazy: CEZ-KONTROLA, CEZ-OPRAVA, CEZ-VERZE, CEZ-UPDATE"))
 (princ)

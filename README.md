@@ -218,13 +218,67 @@ hledat.
 3. Načti hlavní soubor příkazem `APPLOAD` (nebo přetažením `.lsp` souboru do
    plochy výkresu) → vyber `CEZ_ST0093_Validator.lsp` → `Load`.
 4. V příkazové řádce by se mělo objevit:
-   `[CEZ] Nacten validator/opravator CEZ_ST_0093 - prikazy: CEZ-KONTROLA, CEZ-OPRAVA`
+   `[CEZ] Nacten validator/opravator CEZ_ST_0093 vX.X.X - prikazy: CEZ-KONTROLA, CEZ-OPRAVA, CEZ-VERZE, CEZ-UPDATE`
 
-Pokud chceš nástroj nahrávat automaticky při každém spuštění AutoCADu, přidej
-řádek do `acaddoc.lsp` (nebo `S::STARTUP`):
+## Automatické načítání (bez vkládání do každého výkresu)
+
+Nástroj se dá nechat, aby ho AutoCAD **automaticky nabídl v každém výkresu**,
+aniž bys ho musel ručně přes `APPLOAD` načítat pokaždé znovu. Dvě možnosti:
+
+### A) Startup Suite (doporučeno, přes GUI, bez psaní kódu)
+
+1. Příkaz `APPLOAD` → v dialogu klikni na `Contents...` vedle sekce
+   **Startup Suite** (dole).
+2. `Add...` → vyber `CEZ_ST0093_Validator.lsp` → `Close`.
+3. Od teď se soubor automaticky načte při **každém spuštění AutoCADu**
+   (jednou za appku, ne za výkres) – příkazy `CEZ-KONTROLA`/`CEZ-OPRAVA`
+   budou dostupné v libovolném otevřeném výkresu.
+
+### B) acaddoc.lsp (alternativa, hodí se pro hromadné nasazení na víc PC)
+
+Pokud chceš, aby se nástroj načetl **do každého jednotlivého výkresu** (ne
+jen jednou za appku – užitečné např. když AutoCAD běží jako více
+samostatných instancí), vytvoř/uprav soubor `acaddoc.lsp` (musí být na
+Support File Search Path) a přidej řádek:
 ```lisp
 (load "C:/cesta/k/CEZ_ST0093_Validator.lsp")
 ```
+`acaddoc.lsp` se automaticky načte při otevření/založení každého výkresu
+(pokud to nemáš v AutoCADu vypnuté v zabezpečení – `SECURELOAD` musí
+danou složku důvěryhodnou cestu povolovat, což už řeší krok 2 v Instalaci
+výše).
+
+## Aktualizace z GitHubu (`CEZ-VERZE`, `CEZ-UPDATE`)
+
+Nástroj umí sám zkontrolovat a stáhnout novou verzi přímo z GitHubu
+(`Chuck3CZ/cez-autocad-validator`) – bez gitu, bez ručního stahování.
+
+- **`CEZ-VERZE`** – jen zjistí a vypíše, jestli je na GitHubu novější verze
+  než ta, kterou máš právě načtenou. Nic nemění.
+- **`CEZ-UPDATE`** – stáhne aktuální `CEZ_ST0093_Validator.lsp` i
+  `CEZ_LAYERS_DATA.lsp` z GitHubu, **přepíše jimi mistní soubory** (najde
+  je stejně jako `findfile` – tedy tam, odkud je AutoCAD zrovna načetl přes
+  Support File Search Path) a rovnou je znovu načte, aby se nové příkazy
+  projevily bez restartu AutoCADu.
+
+**Jak to funguje:** přes ActiveX/COM objekt `MSXML2.ServerXMLHTTP.6.0`
+(součást Windows) provede AutoLISP synchronní HTTPS GET na
+`raw.githubusercontent.com/Chuck3CZ/cez-autocad-validator/main/...`.
+
+**Důležitá omezení:**
+- **Funguje jen na AutoCADu pro Windows.** AutoCAD pro Mac COM/ActiveX
+  automatizaci nepodporuje, tam `CEZ-VERZE`/`CEZ-UPDATE` fungovat nebudou
+  (ostatní příkazy `CEZ-KONTROLA`/`CEZ-OPRAVA` na tom nezávisí a fungují
+  všude).
+- Vyžaduje aktivní připojení k internetu; při výpadku/firewallu/proxy
+  nahlásí chybu a nic nezmění.
+- **Tato část nebyla odzkoušena v reálném AutoCADu** (viz Známá omezení
+  níže) – technika `MSXML2.ServerXMLHTTP.6.0` je v AutoLISPu běžně
+  používaná a dobře zdokumentovaná, ale doporučuji nejdřív vyzkoušet
+  `CEZ-VERZE` (jen čte, nic nemění) a až pak `CEZ-UPDATE`.
+- `CEZ-UPDATE` přepisuje soubory na disku – pokud sis do nich sám něco
+  dopsal/upravil, o to přijdeš. Pokud si nástroj upravuješ, drž si vlastní
+  kopii mimo cestu, kterou aktualizuje `CEZ-UPDATE`.
 
 ## Použití
 
@@ -234,6 +288,7 @@ Pokud chceš nástroj nahrávat automaticky při každém spuštění AutoCADu, 
 - `CEZ-OPRAVA` – totéž, navíc provede bezpečné automatické opravy popsané
   výše a uloží log `<název_výkresu>_CEZ_oprava.log`. Po opravě provede
   `REGEN`.
+- `CEZ-VERZE` / `CEZ-UPDATE` – viz "Aktualizace z GitHubu" výše.
 
 **Doporučení:** před prvním použitím `CEZ-OPRAVA` na ostrém výkresu si
 udělej zálohu (nebo spusť nejdřív `CEZ-KONTROLA`, zkontroluj log a teprve
@@ -271,8 +326,24 @@ pak `CEZ-OPRAVA`).
   `PSTYLEMODE` (musí být `1` = Color Dependent Plot Style/.ctb) a upozorní,
   pokud výkres používá pojmenované plot styly (`.stb`) místo barevně
   závislých.
+- **`CEZ-VERZE`/`CEZ-UPDATE` (bod 8, auto-update z GitHubu)** nebyly
+  odzkoušeny v reálném AutoCADu (stejné omezení prostředí jako u zbytku
+  nástroje). Technika `MSXML2.ServerXMLHTTP.6.0` je standardní a dobře
+  zdokumentovaná, ale funguje jen na AutoCADu pro Windows (Mac nemá
+  ActiveX/COM automatizaci) a vyžaduje aktivní internetové připojení.
+  Vyzkoušej nejdřív `CEZ-VERZE` (jen čte), až pak `CEZ-UPDATE` (přepisuje
+  soubory na disku).
 
 ## Opravy (changelog)
+
+- **Přidáno: `CEZ-VERZE`/`CEZ-UPDATE` (auto-update z GitHubu) a návod na
+  Startup Suite/`acaddoc.lsp` (auto-load bez vkládání do každého výkresu).**
+  Nástroj teď má vlastní číslo verze (`*cez-validator-version*`) a umí se
+  sám aktualizovat přes ActiveX/COM (`MSXML2.ServerXMLHTTP.6.0`) přímo z
+  `raw.githubusercontent.com` – funguje jen na AutoCADu pro Windows,
+  vyžaduje internet, a **nebyla odzkoušena v reálném AutoCADu** (viz Známá
+  omezení). Doplněn i podrobný návod na `Startup Suite` (přes GUI,
+  doporučeno) a `acaddoc.lsp` (alternativa pro hromadné nasazení).
 
 - **Oprava falešných chyb na pokračovacích listech (Pole-2/Pole-3):**
   kontrola popisového pole dřív vyžadovala vyplnění `ČÍSLO_AKCE` a
