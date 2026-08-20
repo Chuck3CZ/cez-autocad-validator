@@ -1,0 +1,112 @@
+;********************************************************************************
+;*********************************      ___    ______ ________  ___    ______   *
+;* definice typ˘ Ëar zmz_kan.lin *     /   \  |   _  \        |/   \  |   _  \  *
+;*                               *    /  _  \ |  |_|  |_    __|  _  \ |  |_|  | *
+;*          KANALIZACE           *   /  /_\  \|      /  |  | /  /_\  \|   ___/ 	*
+;*********************************  /   ___   \  |\  \  |  |/   ___   \  |	    *
+;*                               * /___/   \___\_| \__\ |__|___/   \___\_|	    *
+;*    PV = podzemnÌ vedenÌ	     *                                              *
+;*    NV = nadzemnÌ vedenÌ	     ************************************************
+;*    NP = neovÏ¯en˝ pr˘bÏh      *                 petr@patra.cz                *
+;*	                             *		           10.08.2020			        *
+;********************************************************************************
+;
+*KANNERPV, kanalizace nerozliöen· PV
+A,45.0,-2.0,[KANNERPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANNERNV, kanalizace nerozliöen· NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANNERNV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANNERNP, kanalizace nerozliöen· NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANNERNP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANDESPV, kanalizace deöùov· PV
+A,45.0,-2.0,[KANDESPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANDESNV, kanalizace deöùov· NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANDESNV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANDESNP, kanalizace deöùov· NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANDESNP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANSPLPV, kanalizace splaökov· PV
+A,45.0,-2.0,[KANSPLPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANSPLNV, kanalizace splaökov· NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANSPLNV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANSPLNP, kanalizace splaökov· NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANSPLNP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANPRUPV, kanalizace pr˘myslov· PV
+A,45.0,-2.0,[KANPRUPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANPRUNV, kanalizace pr˘myslov· NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANPRUNV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANPRUNP, kanalizace pr˘myslov· NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANPRUNP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANOLEPV, kanalizace olejov· PV
+A,45.0,-2.0,[KANOLEPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANOLENV, kanalizace olejov· NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANOLENV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANOLENP, kanalizace olejov· NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANOLENP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANTUKPV, kanalizace tukov· PV
+A,45.0,-2.0,[KANTUKPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANTUKNV, kanalizace tukov· NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANTUKNV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANTUKNP, kanalizace tukov· NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANTUKNP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANJEDPV, kanalizace jednotn· PV
+A,45.0,-2.0,[KANJEDPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANJEDNV, kanalizace jednotn· NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANJEDNV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANJEDNP, kanalizace jednotn· NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANJEDNP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANDREPV, kanalizace dren·ûnÌ PV
+A,45.0,-2.0,[KANDREPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANDRENV, kanalizace dren·ûnÌ NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANDRENV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANDRENP, kanalizace dren·ûnÌ NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANDRENP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANMOUPV, kanalizace mourov· PV
+A,45.0,-2.0,[KANMOUPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANMOUNV, kanalizace mourov· NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANMOUNV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANMOUNP, kanalizace mourov· NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANMOUNP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANKALPV, kanalizace kaly PV
+A,45.0,-2.0,[KANKALPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANKALNV, kanalizace kaly NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANKALNV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANKALNP, kanalizace kaly NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANKALNP,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANODLPV, kanalizace odlehËovacÌ stoka PV
+A,45.0,-2.0,[KANODLPV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANODLNV, kanalizace odlehËovacÌ stoka NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[KANODLNV,"zmz_kan.shx",s=0.1],-5.0
+;
+*KANODLNP, kanalizace odlehËovacÌ stoka NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[KANODLNP,"zmz_kan.shx",s=0.1],-5.0
+;

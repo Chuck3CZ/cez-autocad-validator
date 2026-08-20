@@ -1,0 +1,247 @@
+;********************************************************************************
+;*********************************      ___    ______ ________  ___    ______   *
+;* definice typù èar zmz_pro.lin *     /   \  |   _  \        |/   \  |   _  \  *
+;*                               *    /  _  \ |  |_|  |_    __|  _  \ |  |_|  | *
+;*          PRODUKTOVOD          *   /  /_\  \|      /  |  | /  /_\  \|   ___/ 	*
+;*********************************  /   ___   \  |\  \  |  |/   ___   \  |	    *
+;*                               * /___/   \___\_| \__\ |__|___/   \___\_|	    *
+;*    PV = podzemní vedení	     *                                              *
+;*    NV = nadzemní vedení	     ************************************************
+;*    NP = neovìøený prùbìh      *                 petr@patra.cz                *
+;*	                             *		           10.08.2020			        *
+;********************************************************************************
+;
+*PRONERPV, produktovod nerozlišený PV
+A,45.0,-2.0,[PRONERPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PRONERNV, produktovod nerozlišený NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PRONERNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PRONERNP, produktovod nerozlišený NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PRONERNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLTPV, produktovod plyn technický PV
+A,45.0,-2.0,[PROPLTPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLTNV, produktovod plyn technický NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROPLTNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLTNP, produktovod plyn technický NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROPLTNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLVPV, produktovod plyn vodík PV
+A,45.0,-3.0,["V",standard,S=0.75,U=0,X=-2,Y=-0.375],-0.5,[PROPLVPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROPLVNV, produktovod plyn vodík NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["V",standard,S=0.75,U=0,X=-2,Y=-0.375],-0.5,[PROPLVNV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROPLVNP, produktovod plyn vodík NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["V",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[PROPLVNP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROPLKPV, produktovod plyn kyslík PV
+A,45.0,-3.0,["K",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROPLKPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROPLKNV, produktovod plyn kyslík NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["K",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROPLKNV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROPLKNP, produktovod plyn kyslík NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["K",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROPLKNP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROPLYNPV, produktovod plynovod nerozlišený PV
+A,45.0,-2.0,[PROPLYNPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYNNV, produktovod plynovod nerozlišený NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROPLYNNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYNNP, produktovod plynovod nerozlišený NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROPLYNNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYAPV, produktovod plynovod nízkotlaký PV
+A,45.0,-2.0,[PROPLYAPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYANV, produktovod plynovod nízkotlaký NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROPLYANV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYANP, produktovod plynovod nízkotlak NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROPLYANP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYBPV, produktovod plynovod støedotlaký PV
+A,45.0,-2.0,[PROPLYBPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYBNV, produktovod plynovod støedotlaký NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROPLYBNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYBNP, produktovod plynovod støedotlaký NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROPLYBNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYCPV, produktovod plynovod vysokotlaký PV
+A,45.0,-2.0,[PROPLYCPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYCNV, produktovod plynovod vysokotlaký NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROPLYCNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYCNP, produktovod plynovod vysokotlaký NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROPLYCNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROVZDPV, produktovod vzduch PV
+A,45.0,-2.0,[PROVZDPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROVZDNV, produktovod vzduch NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROVZDNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROVZDNP, produktovod vzduch NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROVZDNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROTEPNPV, produktovod teplovod nerozlišený PV
+A,45.0,-2.0,[PROTEPNPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROTEPNNV, produktovod teplovod nerozlišený NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROTEPNNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROTEPNNP, produktovod teplovod nerozlišený NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROTEPNNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROHORPPV, produktovod teplovod horkovod primární PV
+A,45.0,-2.0,[PROHORPPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROHORPNV, produktovod teplovod horkovod primární NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROHORPNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROHORPNP, produktovod teplovod horkovod primární NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROHORPNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROTEPPPV, produktovod teplovod primární PV
+A,45.0,-2.0,[PROTEPPPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROTEPPNV, produktovod teplovod primární NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROTEPPNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROTEPPNP, produktovod teplovod primární NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROTEPPNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROTEPSPV, produktovod teplovod sekundární rozvod tepla PV
+A,45.0,-2.0,[PROTEPSPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROTEPSNV, produktovod teplovod sekundární rozvod tepla NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROTEPSNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROTEPSNP, produktovod teplovod sekundární rozvod tepla NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROTEPSNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPARPV, produktovod teplovod parovod PV
+A,45.0,-2.0,[PROPARPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPARNV, produktovod teplovod parovod NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROPARNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPARNP, produktovod teplovod parovod NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROPARNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROKONPV, produktovod kondenzát PV
+A,45.0,-3.0,["K",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROKONPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROKONNV, produktovod kondenzát NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["K",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROKONNV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROKONNP, produktovod kondenzát NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["K",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROKONNP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROSTRPV, produktovod struskovod PV
+A,45.0,-2.0,[PROSTRPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROSTRNV, produktovod struskovod NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROSTRNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROSTRNP, produktovod struskovod NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROSTRNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROLTOPV, produktovod mazut a LTO PV
+A,45.0,-3.0,["M",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROLTOPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROLTONV, produktovod mazut a LTO NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["M",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROLTONV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROLTONP, produktovod mazut a LTO NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["M",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROLTONP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PRONAFPV, produktovod nafta PV
+A,45.0,-3.0,["N",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PRONAFPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PRONAFNV, produktovod nafta NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["N",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PRONAFNV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PRONAFNP, produktovod nafta NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["N",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PRONAFNP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROLOUPV, produktovod louh sodný PV
+A,45.0,-3.0,["L",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROLOUPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROLOUNV, produktovod louh sodný NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["L",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROLOUNV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROLOUNP, produktovod louh sodný NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["L",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROLOUNP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROHCLPV, produktovod kyselina solná PV
+A,45.0,-3.0,["HCL",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROHCLPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROHCLNV, produktovod kyselina solná NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["HCL",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROHCLNV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROHCLNP, produktovod kyselina solná NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["HCL",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROHCLNP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROHSOPV, produktovod kyselina sírová PV
+A,45.0,-3.0,["HSO",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROHSOPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROHSONV, produktovod kyselina sírová NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["HSO",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROHSONV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROHSONP, produktovod kyselina sírová NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["HSO",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROHSONP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROSIRPV, produktovod síran železitý PV
+A,45.0,-3.0,["SZ",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROSIRPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROSIRNV, produktovod síran železitý NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["SZ",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROSIRNV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROSIRNP, produktovod síran železitý NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["SZ",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROSIRNP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROVAPPV, produktovod mletý vápenec PV
+A,45.0,-3.0,["MV",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROVAPPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROVAPNV, produktovod mletý vápenec NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["MV",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROVAPNV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROVAPNP, produktovod mletý vápenec NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["MV",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[PROVAPNP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROPLYDPV, produktovod plynovod velmi vysokotlaký PV
+A,45.0,-2.0,[PROPLYDPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYDNV, produktovod plynovod velmi vysokotlaký NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROPLYDNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPLYDNP, produktovod plynovod velmi vysokotlaký NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROPLYDNP,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROVEPPV, produktovod vedlejší energoprodukty PV
+A,45.0,-3.0,["VEP",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[PROVEPPV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROVEPNV, produktovod vedlejší energoprodukty NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["VEP",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[PROVEPNV,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROVEPNP, produktovod vedlejší energoprodukty NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["VEP",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[PROVEPNP,"zmz_pro.shx",s=0.1],-4.0
+;
+*PROPOSPV, produktovod potrubní pošta PV
+A,45.0,-2.0,[PROPOSPV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPOSNV, produktovod potrubní pošta NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[PROPOSNV,"zmz_pro.shx",s=0.1],-5.0
+;
+*PROPOSNP, produktovod potrubní pošta NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[PROPOSNP,"zmz_pro.shx",s=0.1],-5.0
+;

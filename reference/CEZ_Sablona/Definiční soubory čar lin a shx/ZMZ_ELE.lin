@@ -1,0 +1,157 @@
+;********************************************************************************
+;*********************************      ___    ______ ________  ___    ______   *
+;* definice typ˘ Ëar zmz_ele.lin *     /   \  |   _  \        |/   \  |   _  \  *
+;*                               *    /  _  \ |  |_|  |_    __|  _  \ |  |_|  | *
+;*            ELEKTRO            *   /  /_\  \|      /  |  | /  /_\  \|   ___/ 	*
+;*********************************  /   ___   \  |\  \  |  |/   ___   \  |	    *
+;*                               * /___/   \___\_| \__\ |__|___/   \___\_|	    *
+;*    PV = podzemnÌ vedenÌ	     *                                              *
+;*    NV = nadzemnÌ vedenÌ	     ************************************************
+;*    NP = neovÏ¯en˝ pr˘bÏh      *                 petr@patra.cz                *
+;*	                             *		           11.09.2024			        *
+;********************************************************************************
+;
+*ELENERPV, elektro nerozliöenÈ PV
+A,45.0,-2.0,[ELENERPV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELENERNV, elektro nerozliöenÈ NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[ELENERNV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELENERNP, elektro nerozliöenÈ NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[ELENERNP,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESILAPV, elektro silnoproud do 0,3kV PV
+A,45.0,-2.0,[ELESILAPV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESILANV, elektro silnoproud do 0,3kV NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[ELESILANV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESILANP, elektro silnoproud do 0,3kV NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[ELESILANP,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESILBPV, elektro silnoproud od 0,3kV do 38kV PV
+A,45.0,-2.0,[ELESILBPV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESILBNV, elektro silnoproud od 0,3kV do 38kV NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[ELESILBNV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESILBNP, elektro silnoproud od 0,3kV do 38kV NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[ELESILBNP,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESILCPV, elektro silnoproud od 38kV PV
+A,45.0,-2.0,[ELESILCPV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESILCNV, elektro silnoproud od 38kV NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[ELESILCNV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESILCNP, elektro silnoproud od 38kV NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[ELESILCNP,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESLAPV, elektro slaboproud PV
+A,45.0,-2.0,[ELESLAPV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESLANV, elektro slaboproud NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[ELESLANV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELESLANP, elektro slaboproud NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[ELESLANP,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELEPOCPV, elektro poËÌtaËov· sÌù PV
+A,45.0,-3.0,["PS",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEPOCPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEPOCNV, elektro poËÌtaËov· sÌù NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["PS",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEPOCNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEPOCNP, elektro poËÌtaËov· sÌù NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["PS",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEPOCNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEEPSPV, elektro poû·rnÌ signalizace PV
+A,45.0,-3.0,["PO",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEEPSPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEEPSNV, elektro poû·rnÌ signalizace NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["PO",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEEPSNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEEPSNP, elektro poû·rnÌ signalizace NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["PO",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEEPSNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEEZSPV, elektro zabezpeËenÌ staveb PV
+A,45.0,-3.0,["ZS",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEEZSPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEEZSNV, elektro zabezpeËenÌ staveb NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["ZS",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEEZSNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEEZSNP, elektro zabezpeËenÌ staveb NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["ZS",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEEZSNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELETELPV, elektro telefon PV
+A,45.0,-3.0,["T",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELETELPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELETELNV, elektro telefon NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["T",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELETELNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELETELNP, elektro telefon NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["T",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELETELNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELERELPV, elektro releovÈ PV
+A,45.0,-3.0,["R",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELERELPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELERELNV, elektro releovÈ NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["R",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELERELNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELERELNP, elektro releovÈ NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["R",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELERELNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEMARPV, elektro MaR PV
+A,45.0,-3.0,["M",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEMARPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEMARNV, elektro MaR NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["M",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEMARNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEMARNP, elektro MaR NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["M",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEMARNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEUZEPV, elektro uzemnÏnÌ PV
+A,45.0,-2.0,[ELEUZEPV,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELEUZENP, elektro uzemnÏnÌ NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[ELEUZENP,"zmz_ele.shx",s=0.1],-5.0
+;
+*ELECASPV, elektro jednotn˝ Ëas PV
+A,45.0,-3.0,["H",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELECASPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELECASNV, elektro jednotn˝ Ëas NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["H",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELECASNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELECASNP, elektro jednotn˝ Ëas NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["H",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELECASNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEROZPV, elektro z·vodnÌ rozhlas PV
+A,45.0,-3.0,["ZR",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEROZPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEROZNV, elektro z·vodnÌ rozhlas NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["ZR",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEROZNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEROZNP, elektro z·vodnÌ rozhlas NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["ZR",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEROZNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEVEOPV, elektro ve¯ejnÈ osvÏtlenÌ PV
+A,45.0,-3.0,["VO",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[ELENERPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEVEONV, elektro ve¯ejnÈ osvÏtlenÌ NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["VO",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[ELENERNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEVEONP, elektro ve¯ejnÈ osvÏtlenÌ NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["VO",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.25,[ELENERNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEANTPV, elektro antÈny PV
+A,45.0,-3.0,["A",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEANTPV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEANTNV, elektro antÈny NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["A",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEANTNV,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEANTNP, elektro antÈny NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["A",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[ELEANTNP,"zmz_ele.shx",s=0.1],-4.0
+;
+*ELEBEZNV, elektro bezdr·tov˝, radiov˝, mikrovlnn˝ spoj NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["BEZ",standard,S=0.75,R=0,X=-2,Y=-0.375],-1.0
+;

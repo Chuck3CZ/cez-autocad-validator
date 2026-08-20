@@ -1,0 +1,121 @@
+;********************************************************************************
+;*********************************      ___    ______ ________  ___    ______   *
+;* definice typù èar ZMZ_VOD.lin *     /   \  |   _  \        |/   \  |   _  \  *
+;*                               *    /  _  \ |  |_|  |_    __|  _  \ |  |_|  | *
+;*             VODA              *   /  /_\  \|      /  |  | /  /_\  \|   ___/ 	*
+;*********************************  /   ___   \  |\  \  |  |/   ___   \  |	    *
+;*                               * /___/   \___\_| \__\ |__|___/   \___\_|	    *
+;*    PV = podzemní vedení	     *                                              *
+;*    NV = nadzemní vedení	     ************************************************
+;*    NP = neovìøený prùbìh      *                 petr@patra.cz                *
+;*	                             *		           10.08.2020			        *
+;********************************************************************************
+;
+*VODNERPV, voda nerozlišená PV
+A,45.0,-2.0,[VODNERPV,"zmz_vod.shx",s=0.1],-5.0
+;
+*VODNERNV, voda nerozlišená NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,[VODNERNV,"zmz_vod.shx",s=0.1],-5.0
+;
+*VODNERNP, voda nerozlišená NP
+A,1.0,-0.5,0.5,-0.5,1.0,-1.5,[VODNERNP,"zmz_vod.shx",s=0.1],-5.0
+;
+*VODPITPV, voda pitná PV
+A,45.0,-3.0,[VODPITPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODPITNV, voda pitná NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,[VODPITNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODPITNP, voda pitná NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,[VODPITNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODPOZPV, voda požární PV
+A,45.0,-3.0,["P",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODPOZPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODPOZNV, voda požární NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["P",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODPOZNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODPOZNP, voda požární NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["P",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODPOZNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODCHLPV, voda chladící PV
+A,45.0,-3.0,["CH",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODCHLPV,"zmz_vod.shx",s=0.1],-3.0
+;
+*VODCHLNV, voda chladící NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["CH",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODPOZNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODCHLNP, voda chladící NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["CH",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODPOZNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODTECPV, voda technologická PV
+A,45.0,-3.0,[VODTECPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODTECNV, voda technologická NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,[VODTECNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODTECNP, voda technologická NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,[VODTECNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODODPPV, voda odpadní-vratná PV
+A,45.0,-3.0,["V",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODODPPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODODPNV, voda odpadní-vratná NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["V",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODODPNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODODPNP, voda odpadní-vratná NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["V",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODODPNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODCIRPV, voda èiøená PV
+A,45.0,-3.0,["C",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODCIRPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODCIRNV, voda èiøená NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["C",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODCIRNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODCIRNP, voda èiøená NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["C",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODCIRNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODSURPV, voda surová PV
+A,45.0,-3.0,["S",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODSURPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODSURNV, voda surová NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["S",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODSURNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODSURNP, voda surová NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["S",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODSURNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODDEMPV, voda demineralizovaná PV
+A,45.0,-3.0,["D",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODDEMPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODDEMNV, voda demineralizovaná NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["D",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODDEMNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODDEMNP, voda demineralizovaná NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["D",standard,S=0.75,R=0,X=-2,Y=-0.375],-0.5,[VODDEMNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODTVDPV, technická voda dùležitá PV
+A,45.0,-3.0,["TVD",standard,S=0.75,R=0,X=-2,Y=-0.375],-2.5,[VODTVDPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODTVDNV, technická voda dùležitá NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["TVD",standard,S=0.75,R=0,X=-2,Y=-0.375],-2.5,[VODTVDNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODTVDNP, technická voda dùležitá NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["TVD",standard,S=0.75,R=0,X=-2,Y=-0.375],-2.5,[VODTVDNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODTVNPV, technická voda nedùležitá PV
+A,45.0,-3.0,["TVN",standard,S=0.75,R=0,X=-2,Y=-0.375],-2.5,[VODTVNPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODTVNNV, technická voda nedùležitá NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["TVN",standard,S=0.75,R=0,X=-2,Y=-0.375],-2.5,[VODTVNNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODTVNNP, technická voda nedùležitá NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["TVN",standard,S=0.75,R=0,X=-2,Y=-0.375],-2.5,[VODTVNNP,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODZAVPV, voda - závlahy PV
+A,45.0,-3.0,["ZAV",standard,S=0.75,R=0,X=-2,Y=-0.375],-2.5,[VODZAVPV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODZAVNV, voda - závlahy NV
+A,1.0,-1.0,1.0,-1.0,1.0,-1.0,1.0,-3.0,["ZAV",standard,S=0.75,R=0,X=-2,Y=-0.375],-2.5,[VODZAVNV,"zmz_vod.shx",s=0.1],-4.0
+;
+*VODZAVNP, voda - závlahy NP
+A,1.0,-0.5,0.5,-0.5,1.0,-3.0,["ZAV",standard,S=0.75,R=0,X=-2,Y=-0.375],-2.5,[VODZAVNP,"zmz_vod.shx",s=0.1],-4.0
+;

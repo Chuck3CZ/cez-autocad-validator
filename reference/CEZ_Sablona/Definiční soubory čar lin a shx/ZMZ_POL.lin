@@ -1,0 +1,55 @@
+;********************************************************************************
+;*********************************      ___    ______ ________  ___    ______   *
+;* definice typù èar zmz_pol.lin *     /   \  |   _  \        |/   \  |   _  \  *
+;*                               *    /  _  \ |  |_|  |_    __|  _  \ |  |_|  | *
+;*           POLOHOPIS           *   /  /_\  \|      /  |  | /  /_\  \|   ___/ 	*
+;*********************************  /   ___   \  |\  \  |  |/   ___   \  |		*
+;*                               * /___/   \___\_| \__\ |__|___/   \___\_|		*
+;*    PV = podzemní vedení	     *                                              *
+;*    NV = nadzemní vedení	     ************************************************
+;*    NP = neovìøený prùbìh      *                 petr@patra.cz                *
+;*	        	                 *		 		   10.08.2020					*
+;********************************************************************************
+;
+*PLOTDRAT, plot drátìný, kovový
+A,2.5,[PLOTDRAT,"zmz_pol.shx",s=0.1],2.5
+;
+*PLOTZIVY, plot živý
+A,2.5,[PLOTZIVY,"zmz_pol.shx",s=0.1],2.5
+;
+*PLOTOHRA, plot ohradní zeï
+A,2.5,[PLOTOHRA,"zmz_pol.shx",s=0.1],2.5
+;
+*PLOTDREVO, plot døevìný
+A,2.5,[PLOTDREVO,"zmz_pol.shx",s=0.1],2.5
+;
+*OPERNAZED, svislá opìrná, zárubní zeï
+A,2.5,[OPERNAZED,"zmz_pol.shx",s=0.1],2.5
+;
+*HRNEVIDIT, hranice shora neviditelná
+A,0.5,-0.5
+;
+*HRPOHYB, hranice pohyblivá, nestálá
+A,0.15,-0.5
+;
+*HRNEZNAT, hranice neznatelná
+A,0.5,-0.4,0.15,-0.4
+;
+*SVODIDLO, svodidlo
+A,2.5,[SVODIDLO,"zmz_pol.shx",s=0.1],2.5
+;
+*ZABRADLI, zábradlí
+A,2.5,[ZABRADLI,"zmz_pol.shx",s=0.1],2.5
+;
+*KOLEKTOR, hrana kolektoru, energokanálu
+A,1.5,-0.5
+;
+*TECHMOST, hrana prùmìtu mostu a pøesahujících konstrukcí
+A,1.0,-1.0
+;
+*DOPRAVNIK, dopravník, zauhlovací mosty
+A,45.0,-2.0,[DOPRAVNIK,"zmz_pol.shx",s=0.1],-5.0
+;
+*HRPRUM, hrana horního prùmìtu objektu
+A,0.7,-.3,[ZABRADLI,"ZMZ_POL.shx",s=0.00625],-.3,[ZABRADLI,"ZMZ_POL.shx",s=0.00625],-.3
+;
