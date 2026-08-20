@@ -261,24 +261,53 @@ Nástroj umí sám zkontrolovat a stáhnout novou verzi přímo z GitHubu
   Support File Search Path) a rovnou je znovu načte, aby se nové příkazy
   projevily bez restartu AutoCADu.
 
-**Jak to funguje:** přes ActiveX/COM objekt `MSXML2.ServerXMLHTTP.6.0`
-(součást Windows) provede AutoLISP synchronní HTTPS GET na
+**Jak to funguje:** AutoLISP zkusí dva ActiveX/COM objekty (součást
+Windows) v tomto pořadí a použije první, který se dovolá:
+1. `MSXML2.XMLHTTP` – **automaticky dědí nastavení proxy** z Internet
+   Exploreru/systému (Ovládací panely → Možnosti internetu, případně firemní
+   GPO politika). Ve firemní síti s proxy (typické v prostředí dodavatele
+   ČEZ) je to nejspolehlivější varianta, protože stejnou cestou k internetu
+   používá i běžný prohlížeč.
+2. `WinHttp.WinHttpRequest.5.1` – použije se jen pokud první pokus selže;
+   respektuje systémové WinHTTP proxy nastavení (`netsh winhttp import
+   proxy source=ie`).
+
+Oba dělají synchronní HTTPS GET na
 `raw.githubusercontent.com/Chuck3CZ/cez-autocad-validator/main/...`.
+
+**Pokud to i tak nefunguje ("nelze se připojit k internetu" apod.):** je
+to typicky firemní proxy/firewall, který povoluje přístup na internet jen
+prohlížeči (ne přímo procesu `acad.exe`), nebo proxy vyžadující
+přihlášení. Odsud dál to skript nevyřeší – přejdi na **ruční aktualizaci**
+níže, ta funguje vždy, protože stahuje přes prohlížeč, který je ve firemní
+síti skoro vždy povolený.
 
 **Důležitá omezení:**
 - **Funguje jen na AutoCADu pro Windows.** AutoCAD pro Mac COM/ActiveX
   automatizaci nepodporuje, tam `CEZ-VERZE`/`CEZ-UPDATE` fungovat nebudou
   (ostatní příkazy `CEZ-KONTROLA`/`CEZ-OPRAVA` na tom nezávisí a fungují
   všude).
-- Vyžaduje aktivní připojení k internetu; při výpadku/firewallu/proxy
-  nahlásí chybu a nic nezmění.
 - **Tato část nebyla odzkoušena v reálném AutoCADu** (viz Známá omezení
-  níže) – technika `MSXML2.ServerXMLHTTP.6.0` je v AutoLISPu běžně
-  používaná a dobře zdokumentovaná, ale doporučuji nejdřív vyzkoušet
-  `CEZ-VERZE` (jen čte, nic nemění) a až pak `CEZ-UPDATE`.
+  níže) – obě techniky jsou v AutoLISPu běžně používané a dobře
+  zdokumentované, ale doporučuji nejdřív vyzkoušet `CEZ-VERZE` (jen čte,
+  nic nemění) a až pak `CEZ-UPDATE`.
 - `CEZ-UPDATE` přepisuje soubory na disku – pokud sis do nich sám něco
   dopsal/upravil, o to přijdeš. Pokud si nástroj upravuješ, drž si vlastní
   kopii mimo cestu, kterou aktualizuje `CEZ-UPDATE`.
+
+### Ruční aktualizace (funguje vždy, i za firemní proxy)
+
+Pokud `CEZ-UPDATE` hlásí chybu připojení (typicky firemní síť/proxy):
+
+1. V prohlížeči otevři a ulož (Ctrl+S / Uložit jako):
+   - https://raw.githubusercontent.com/Chuck3CZ/cez-autocad-validator/main/CEZ_ST0093_Validator.lsp
+   - https://raw.githubusercontent.com/Chuck3CZ/cez-autocad-validator/main/CEZ_LAYERS_DATA.lsp
+2. Ulož oba soubory **pod stejným jménem** (bez `.txt` přípony navíc – prohlížeč
+   ji někdy chce přidat sám, zkontroluj to) do složky, kde je máš teď
+   (najdeš ji např. přes `APPLOAD` → `Look in` → tam, kde je aktuálně
+   `CEZ_ST0093_Validator.lsp`), a přepiš tím původní soubory.
+3. V AutoCADu spusť znovu `APPLOAD` a načti `CEZ_ST0093_Validator.lsp`
+   (nebo prostě restartuj AutoCAD, pokud máš nástroj ve Startup Suite).
 
 ## Použití
 
@@ -328,13 +357,29 @@ pak `CEZ-OPRAVA`).
   závislých.
 - **`CEZ-VERZE`/`CEZ-UPDATE` (bod 8, auto-update z GitHubu)** nebyly
   odzkoušeny v reálném AutoCADu (stejné omezení prostředí jako u zbytku
-  nástroje). Technika `MSXML2.ServerXMLHTTP.6.0` je standardní a dobře
-  zdokumentovaná, ale funguje jen na AutoCADu pro Windows (Mac nemá
-  ActiveX/COM automatizaci) a vyžaduje aktivní internetové připojení.
-  Vyzkoušej nejdřív `CEZ-VERZE` (jen čte), až pak `CEZ-UPDATE` (přepisuje
-  soubory na disku).
+  nástroje). Zkouší se dvě ActiveX techniky (`MSXML2.XMLHTTP`, pak
+  `WinHttp.WinHttpRequest.5.1`), obě standardní a dobře zdokumentované,
+  ale funguje jen na AutoCADu pro Windows (Mac nemá ActiveX/COM
+  automatizaci) a vyžaduje, aby síť/proxy povolovala přístup z `acad.exe`
+  na `raw.githubusercontent.com` – ve firemní síti to nemusí projít, i
+  když prohlížeč funguje normálně (proxy typicky whitelistuje jen
+  prohlížeč). Pro takový případ je v README sekce "Ruční aktualizace",
+  která funguje vždy. Vyzkoušej nejdřív `CEZ-VERZE` (jen čte), až pak
+  `CEZ-UPDATE` (přepisuje soubory na disku).
 
 ## Opravy (changelog)
+
+- **Oprava `CEZ-UPDATE`/`CEZ-VERZE`: chyba "nelze se připojit k internetu"
+  za firemní proxy.** Původní implementace používala
+  `MSXML2.ServerXMLHTTP.6.0`, který ve výchozím stavu **nedědí** proxy
+  nastavení z prohlížeče/systému (potřebuje samostatnou WinHTTP proxy
+  konfiguraci, kterou firemní IT typicky nenastavuje). Přepsáno na dvojí
+  pokus: nejdřív `MSXML2.XMLHTTP` (automaticky dědí IE/systémovou proxy –
+  stejnou cestu k internetu jako běžný prohlížeč), a pokud selže, jako
+  záloha `WinHttp.WinHttpRequest.5.1`. Přidána i podrobnější diagnostika
+  chyby a nová sekce "Ruční aktualizace" v README pro případ, že ani jedna
+  technika ve firemní síti neprojde (funguje vždy, protože stahuje přes
+  prohlížeč).
 
 - **Přidáno: `CEZ-VERZE`/`CEZ-UPDATE` (auto-update z GitHubu) a návod na
   Startup Suite/`acaddoc.lsp` (auto-load bez vkládání do každého výkresu).**

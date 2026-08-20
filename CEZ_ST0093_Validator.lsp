@@ -147,7 +147,7 @@
 (vl-load-com)
 
 ;; Verze tohoto nastroje a umisteni na GitHubu (pro CEZ-VERZE / CEZ-UPDATE)
-(setq *cez-validator-version* "1.2.0")
+(setq *cez-validator-version* "1.3.0")
 (setq *cez-github-repo* "Chuck3CZ/cez-autocad-validator")
 (setq *cez-github-branch* "main")
 
@@ -1494,21 +1494,36 @@
 ;; znovu nacte.
 ;;
 ;; POZOR: tato cast nebyla odzkousena v realnem AutoCADu (viz POZOR na
-;; zacatku souboru) - synchronni COM volani na MSXML2.ServerXMLHTTP.6.0 je
-;; dobre zdokumentovana a bezne pouzivana technika v AutoLISPu, ale over
-;; prosim funkcnost nejdriv na CEZ-VERZE (jen cte, nic nemeni), az pak
-;; pouzij CEZ-UPDATE (prepisuje mistni soubory).
+;; zacatku souboru). Pouziva se DVOJI pokus, protoze ruzne COM/ActiveX
+;; objekty pro HTTP se v BEZNE FIREMNI SITI S PROXY chovaji ruzne:
+;;  1. "MSXML2.XMLHTTP" - klientsky objekt zalozeny na WinInet, ktery
+;;     AUTOMATICKY DEDI nastaveni proxy z Internet Exploreru/systemu
+;;     (Ovladaci panely > Moznosti internetu, nebo firemni GPO). V siti
+;;     s proxy (typicke ve firemnim/dodavatelskem prostredi) je to tedy
+;;     nejspolehlivejsi volba.
+;;  2. "WinHttp.WinHttpRequest.5.1" - pouziva se jen pokud prvni pokus
+;;     selze; respektuje systemove WinHTTP proxy nastaveni (nastavuje se
+;;     prikazem "netsh winhttp import proxy source=ie" ve Windows), coz
+;;     v nekterych firemnich prostredich take funguje.
+;; Pokud selzou OBA pokusy (typicky proxy vyzadujici prihlaseni, nebo
+;; firewall blokujici primo AutoCAD.exe misto jen prohlizece), pouzij
+;; RUCNI aktualizaci popsanou v README.md ("Rucni aktualizace") - stazeni
+;; pres prohlizec funguje vzdy, protoze prohlizec je ve firemni siti
+;; skoro vzdy povoleny.
 ;; ----------------------------------------------------------------------
 
 ;; Provede synchronni HTTPS GET na danou URL a vrati obsah jako retezec,
-;; nebo nil pri jakekoli chybe (spatne pripojeni, HTTP chyba apod.)
-(defun cez-http-get (url / http res txt)
-  (setq txt nil)
+;; nebo nil pri jakekoli chybe (spatne pripojeni, HTTP chyba, blokovana
+;; proxy apod.) - viz komentar vyse k poradi pokusu.
+(defun cez-http-get (url / http res txt errmsg)
+  (setq txt nil errmsg nil)
+
+  ;; 1. pokus: MSXML2.XMLHTTP (WinInet, dedi IE/systemovou proxy)
   (setq res
     (vl-catch-all-apply
       (function
         (lambda ()
-          (setq http (vlax-create-object "MSXML2.ServerXMLHTTP.6.0"))
+          (setq http (vlax-create-object "MSXML2.XMLHTTP"))
           (vlax-invoke http 'Open "GET" url :vlax-false)
           (vlax-invoke http 'setRequestHeader "Cache-Control" "no-cache")
           (vlax-invoke http 'Send)
@@ -1520,12 +1535,44 @@
       )
     )
   )
-  (if (vl-catch-all-error-p res)
-    (progn (princ (strcat "\n[CEZ] Chyba pri stahovani z '" url "': "
-                           (vl-catch-all-error-message res)))
-           nil)
-    txt
+  (if (and (not txt) (vl-catch-all-error-p res)) (setq errmsg (vl-catch-all-error-message res)))
+
+  ;; 2. pokus (jen pokud prvni selhal): WinHttp.WinHttpRequest.5.1
+  (if (not txt)
+    (progn
+      (setq res
+        (vl-catch-all-apply
+          (function
+            (lambda ()
+              (setq http (vlax-create-object "WinHttp.WinHttpRequest.5.1"))
+              (vlax-invoke http 'SetTimeouts 5000 5000 10000 15000)
+              (vlax-invoke http 'Open "GET" url :vlax-false)
+              (vlax-invoke http 'setRequestHeader "Cache-Control" "no-cache")
+              (vlax-invoke http 'Send)
+              (if (= (vlax-get-property http 'Status) 200)
+                (setq txt (vlax-get-property http 'ResponseText))
+              )
+              (vlax-release-object http)
+            )
+          )
+        )
+      )
+      (if (and (not txt) (vl-catch-all-error-p res)) (setq errmsg (vl-catch-all-error-message res)))
+    )
   )
+
+  (if (not txt)
+    (progn
+      (princ (strcat "\n[CEZ] Nepodarilo se stahnout '" url "'."))
+      (if errmsg (princ (strcat "\n[CEZ] Detail posledni chyby: " errmsg)))
+      (princ "\n[CEZ] Mozne priciny: firemni proxy/firewall povoluje pristup na internet jen")
+      (princ "\n[CEZ] prohlizeci (ne primo AutoCADu), proxy vyzaduje prihlaseni, nebo chybi")
+      (princ "\n[CEZ] pripojeni k internetu.")
+      (princ "\n[CEZ] Reseni: pouzij RUCNI aktualizaci - viz README.md, sekce 'Rucni aktualizace'")
+      (princ "\n[CEZ] (stazeni pres prohlizec + rucni prepsani souboru funguje vzdy).")
+    )
+  )
+  txt
 )
 
 ;; Vytahne hodnotu *cez-validator-version* z textoveho obsahu .lsp souboru
