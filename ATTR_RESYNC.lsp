@@ -124,6 +124,8 @@
 )
 
 (defun ar-ask-rename-map (missing-new missing-old / map avail newtag choice realtag idx)
+  (princ "\n[ATTR-RESYNC] POZOR: na nasledujici otazky se odpovida psanim na klavesnici")
+  (princ " (cislo nebo tag + Enter), NE klikanim mysi do vykresu.")
   (setq map '() avail missing-old)
   (foreach newtag missing-new
     (if avail
@@ -133,7 +135,8 @@
         (setq choice
           (getstring T
             (strcat "\nNovy atribut '" newtag "' - je to nahrada za stary atribut? "
-                    "Zadej CISLO nebo presny TAG stareho atributu [" (ar-numbered-list avail) "] "
+                    "NAPIS na klavesnici cislo nebo presny TAG stareho atributu "
+                    "[" (ar-numbered-list avail) "] - NEKLIKEJ mysi do vykresu "
                     "(Enter = preskocit, pouzije se vychozi hodnota ze sablony): ")
           )
         )
@@ -466,5 +469,5 @@
   (princ)
 )
 
-(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.3) - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
+(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.4) - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
 (princ)
