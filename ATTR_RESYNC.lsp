@@ -33,13 +33,22 @@
 ;;      zdroj prejmenovani, ATTSYNC sam smaze.
 ;;
 ;; POUZITI:
-;;   1. Nejdriv predefinuj blok (BLOCK/BEDIT) tak, jak potrebujes.
+;;   0. DULEZITE (predevsim pri predefinovani pres Block Editor - BEDIT):
+;;      PRED predefinovanim bloku spust ATTR-SNAPSHOT. AutoCAD totiz casto
+;;      pri ulozeni Block Editoru existujici vlozeni sam tise
+;;      pre-synchronizuje - stary atribut (tag+hodnota+poloha) je pak uz
+;;      nenavratne pryc jeste pred tim, nez vubec stihnes spustit
+;;      ATTR-RESYNC. ATTR-SNAPSHOT zalohuje aktualni stav VSECH vlozeni
+;;      daneho bloku do pameti relace, aby to nevadilo.
+;;   1. Predefinuj blok (BLOCK/BEDIT) tak, jak potrebujes.
 ;;   2. Spust prikaz ATTR-RESYNC.
 ;;   3. Klikni na existujici vlozeni predefinovaneho bloku (na geometrii,
 ;;      ne na text atributu), nebo zadej nazev bloku rucne.
 ;;   4. Pro kazdy novy atribut v sablone, ktery jeste zadne vlozeni nema,
 ;;      se skript zepta, jestli je to nahrada za nejaky stary (zruseny)
-;;      atribut, ze ktereho se ma prevzit text.
+;;      atribut, ze ktereho se ma prevzit text I POLOHU/FORMAT. Pokud
+;;      predtim probehl ATTR-SNAPSHOT, pouzije se zalohovany (predchozi)
+;;      stav - jinak aktualni stav vlozeni v okamziku spusteni ATTR-RESYNC.
 ;;   5. Skript provede ATTSYNC + opravu poloh/hodnot pro VSECHNA vlozeni
 ;;      daneho bloku ve vykresu, vse v jedne UNDO skupine (jeden UNDO vse
 ;;      vrati zpet).
@@ -132,8 +141,60 @@
   map
 )
 
+(setq *ar-snapshot* nil)          ; alist: (bname . (list (cons handle saved-attrs)))
+(setq *ar-snapshot-old-tags* nil) ; alist: (bname . list-of-tagu)
+
+;; ATTR-SNAPSHOT: spust PRED predefinovanim bloku (BLOCK/BEDIT+Save).
+;; Duvod: kdyz blok predefinujes pres Block Editor, AutoCAD si existujici
+;; vlozeni casto tise sam pre-synchronizuje uz pri ulozeni editoru - stary
+;; atribut (tag+hodnota+poloha) je v tu chvili nenavratne pryc a
+;; ATTR-RESYNC uz by pak nemel co nabidnout jako zdroj pro prejmenovani.
+;; ATTR-SNAPSHOT proto zaloha stav VSECH vlozeni daneho bloku jeste driv,
+;; nez k predefinici vubec dojde - ATTR-RESYNC pak (pokud zalohu najde)
+;; pouzije tuto zalohu misto aktualniho (uz pripadne prepsaneho) stavu.
+(defun c:ATTR-SNAPSHOT ( / sel elist0 bname ss i ins saved old-tags saved-attrs p)
+  (setq sel (entsel "\nPRED predefinovanim bloku: vyber existujici vlozeni (INSERT), jehoz atributy chces zazalohovat - klikni na geometrii bloku: "))
+  (setq bname nil)
+  (if sel
+    (progn
+      (setq elist0 (entget (car sel)))
+      (if (= (cdr (assoc 0 elist0)) "INSERT")
+        (setq bname (cdr (assoc 2 elist0)))
+        (princ "\n[ATTR-SNAPSHOT] Vybrana entita neni INSERT (blok) - zadej nazev bloku rucne.")
+      )
+    )
+  )
+  (if (not bname) (setq bname (getstring T "\nNazev bloku k zazalohovani: ")))
+  (setq ss (ssget "_X" (list (cons 0 "INSERT") (cons 2 bname))))
+  (if (not ss)
+    (princ (strcat "\n[ATTR-SNAPSHOT] Ve vykresu nejsou zadna vlozeni bloku '" bname "'."))
+    (progn
+      (setq saved '() old-tags '())
+      (setq i 0)
+      (while (< i (sslength ss))
+        (setq ins (ssname ss i))
+        (setq saved-attrs (ar-save-instance-attrs ins))
+        (setq saved (cons (cons (cdr (assoc 5 (entget ins))) saved-attrs) saved))
+        (foreach p saved-attrs
+          (if (not (member (car p) old-tags)) (setq old-tags (cons (car p) old-tags)))
+        )
+        (setq i (1+ i))
+      )
+      (setq *ar-snapshot*
+        (cons (cons bname saved) (vl-remove-if '(lambda (x) (= (car x) bname)) *ar-snapshot*)))
+      (setq *ar-snapshot-old-tags*
+        (cons (cons bname old-tags) (vl-remove-if '(lambda (x) (= (car x) bname)) *ar-snapshot-old-tags*)))
+      (princ (strcat "\n[ATTR-SNAPSHOT] Zazalohovano " (itoa (sslength ss)) " vlozeni bloku '" bname
+                      "' (" (itoa (length old-tags)) " ruznych tagu)."
+                      " Ted muzes blok bezpecne predefinovat (BLOCK/BEDIT+Save) a pak spustit ATTR-RESYNC -"
+                      " pouzije tuto zalohu, i kdyz mezitim AutoCAD atributy na vlozenich sam pre-synchronizoval."))
+    )
+  )
+  (princ)
+)
+
 (defun c:ATTR-RESYNC ( / sel elist0 bname ss i ins new-tags old-tags missing-new missing-old
-                       rename-map saved saved-attrs p rec h e elist tag oldpair map-pair srcpair code)
+                       rename-map saved saved-attrs p rec h e elist tag oldpair map-pair srcpair code snap snap-tags)
   (setq sel (entsel "\nVyber existujici vlozeni (INSERT) predefinovaneho bloku - klikni na geometrii bloku, ne na text atributu: "))
   (setq bname nil)
   (if sel
@@ -157,17 +218,31 @@
       (if (not ss)
         (princ (strcat "\n[ATTR-RESYNC] Ve vykresu nejsou zadna vlozeni bloku '" bname "'."))
         (progn
-          ;; Ulozit stav VSECH vlozeni PRED synchronizaci.
-          (setq saved '() old-tags '())
-          (setq i 0)
-          (while (< i (sslength ss))
-            (setq ins (ssname ss i))
-            (setq saved-attrs (ar-save-instance-attrs ins))
-            (setq saved (cons (cons (cdr (assoc 5 (entget ins))) saved-attrs) saved))
-            (foreach p saved-attrs
-              (if (not (member (car p) old-tags)) (setq old-tags (cons (car p) old-tags)))
+          ;; Pokud existuje drivejsi ATTR-SNAPSHOT tohoto bloku, pouzit jeho ulozeny
+          ;; stav (spolehlive i kdyz AutoCAD mezitim atributy na vlozenich uz sam
+          ;; pre-synchronizoval pri ulozeni Block Editoru). Jinak (zadny snapshot)
+          ;; zalohovat aktualni stav VSECH vlozeni ted - funguje jen pokud predefinice
+          ;; bloku sama o sobe existujici vlozeni jeste neprepsala.
+          (setq snap (assoc bname *ar-snapshot*))
+          (setq snap-tags (assoc bname *ar-snapshot-old-tags*))
+          (if snap
+            (progn
+              (setq saved (cdr snap) old-tags (cdr snap-tags))
+              (princ (strcat "\n[ATTR-RESYNC] Pouzivam drivejsi ATTR-SNAPSHOT bloku '" bname "'."))
             )
-            (setq i (1+ i))
+            (progn
+              (setq saved '() old-tags '())
+              (setq i 0)
+              (while (< i (sslength ss))
+                (setq ins (ssname ss i))
+                (setq saved-attrs (ar-save-instance-attrs ins))
+                (setq saved (cons (cons (cdr (assoc 5 (entget ins))) saved-attrs) saved))
+                (foreach p saved-attrs
+                  (if (not (member (car p) old-tags)) (setq old-tags (cons (car p) old-tags)))
+                )
+                (setq i (1+ i))
+              )
+            )
           )
 
           (setq missing-new (vl-remove-if '(lambda (x) (member x old-tags)) new-tags))
@@ -211,14 +286,20 @@
                       (entupd e)
                     )
                     (t
-                      ;; novy tag - pokud je namapovan na stary, prevzit text
+                      ;; novy tag - pokud je namapovan na stary (prejmenovany atribut),
+                      ;; prevzit z nej text I POLOHU/FORMAT (stejne jako u nezmenenych
+                      ;; tagu vyse) - ATTSYNC u prejmenovaneho tagu zadnou puvodni
+                      ;; hodnotu ani polohu neresi, je to zcela novy atribut
                       (setq map-pair (assoc tag rename-map))
                       (if map-pair
                         (progn
                           (setq srcpair (assoc (cdr map-pair) saved-attrs))
                           (if srcpair
                             (progn
-                              (setq elist (ar-set-dxf elist 1 (assoc 1 (cdr srcpair))))
+                              (setq srcpair (cdr srcpair))
+                              (foreach code '(1 8 7 10 11 40 41 50 51 62 72 74)
+                                (setq elist (ar-set-dxf elist code (assoc code srcpair)))
+                              )
                               (entmod elist)
                               (entupd e)
                             )
@@ -245,12 +326,13 @@
 ;; ============================================================================
 ;; ATTR-COPY / ATTR-PASTE
 ;;
-;; Jednoduchy doplnkovy nastroj pro rucni prenos textove hodnoty mezi
-;; atributy/textem - typicky kdyz rusis stary atribut a chces jeho hodnotu
-;; prenest do nove pridaneho, mimo cely ATTR-RESYNC postup (napr. jen jeden
-;; konkretni atribut, nebo TEXT/MTEXT entita).
+;; Jednoduchy doplnkovy nastroj pro rucni prenos OBSAHU I POLOHY/FORMATU
+;; mezi atributy/textem - typicky kdyz rusis stary atribut a chces jeho
+;; hodnotu i presne umisteni prenest do nove pridaneho, mimo cely
+;; ATTR-RESYNC postup (napr. jen jeden konkretni atribut, nebo TEXT/MTEXT
+;; entita mimo blok).
 ;;
-;; Nejde o systemovou (OS) schranku Windows - hodnota se drzi jen v pameti
+;; Nejde o systemovou (OS) schranku Windows - data se drzi jen v pameti
 ;; aktualni relace AutoCADu (promenna *ar-clipboard*). To je zamerne:
 ;; funguje spolehlive bez ohledu na verzi/nastaveni OS schranky a bez zavislosti
 ;; na ActiveX/COM.
@@ -258,17 +340,23 @@
 ;; POUZITI:
 ;;   1. Pred smazanim stareho atributu: spust ATTR-COPY a klikni primo na
 ;;      text puvodniho atributu (ne na geometrii bloku).
-;;   2. Smaz stary atribut / pridej novy jak potrebujes.
+;;   2. Smaz stary atribut / pridej novy jak potrebujes (napr. predefinuj
+;;      blok s novym atributem na jinem miste/vychozim formatu).
 ;;   3. Spust ATTR-PASTE a klikni na novy (nebo jakykoli jiny) atribut/text -
-;;      jeho hodnota se prepise obsahem ze schranky.
+;;      prepise se obsahem, polohou, vyskou, rotaci, stylem, vrstvou i
+;;      barvou ze schranky (presne umisteni puvodniho atributu).
 ;;
 ;; Funguje na ATTRIB, ATTDEF, TEXT i MTEXT entitach.
 ;; ============================================================================
 
+;; DXF kody, ktere ATTR-COPY/ATTR-PASTE prenasi: 1=text, 7=styl, 8=vrstva,
+;; 10/11=poloha, 40=vyska, 41=sirkovy faktor, 50=rotace, 51=sklon,
+;; 62=barva, 72/73/74=zarovnani.
+(setq *ar-copy-codes* (list 1 7 8 10 11 40 41 50 51 62 72 73 74))
 (setq *ar-clipboard* nil)
 
-(defun c:ATTR-COPY ( / sel elist etype val)
-  (setq sel (entsel "\nVyber atribut/text, jehoz hodnotu chces zkopirovat: "))
+(defun c:ATTR-COPY ( / sel elist etype code pair)
+  (setq sel (entsel "\nVyber atribut/text, jehoz obsah a polohu chces zkopirovat: "))
   (if (not sel)
     (princ "\n[ATTR-COPY] Nic nevybrano.")
     (progn
@@ -276,9 +364,13 @@
       (setq etype (cdr (assoc 0 elist)))
       (if (member etype (list "ATTRIB" "ATTDEF" "TEXT" "MTEXT"))
         (progn
-          (setq val (cdr (assoc 1 elist)))
-          (setq *ar-clipboard* val)
-          (princ (strcat "\n[ATTR-COPY] Zkopirovano (" etype "): \"" val "\""))
+          (setq *ar-clipboard* '())
+          (foreach code *ar-copy-codes*
+            (setq pair (assoc code elist))
+            (if pair (setq *ar-clipboard* (cons pair *ar-clipboard*)))
+          )
+          (princ (strcat "\n[ATTR-COPY] Zkopirovano (" etype ", vc. polohy/formatu): \""
+                          (cdr (assoc 1 elist)) "\""))
         )
         (princ (strcat "\n[ATTR-COPY] Vybrana entita (" etype ") neni ATTRIB/ATTDEF/TEXT/MTEXT - nelze zkopirovat."))
       )
@@ -287,31 +379,33 @@
   (princ)
 )
 
-(defun c:ATTR-PASTE ( / sel elist etype)
+(defun c:ATTR-PASTE ( / sel elist etype code pair)
   (cond
     ((not *ar-clipboard*)
       (princ "\n[ATTR-PASTE] Schranka je prazdna - nejdriv pouzij ATTR-COPY.")
     )
     (t
-      (setq sel (entsel "\nVyber atribut/text, do ktereho chces vlozit zkopirovanou hodnotu: "))
+      (setq sel (entsel "\nVyber atribut/text, do ktereho chces vlozit zkopirovany obsah a polohu: "))
       (if (not sel)
         (princ "\n[ATTR-PASTE] Nic nevybrano.")
         (progn
           (setq elist (entget (car sel)))
           (setq etype (cdr (assoc 0 elist)))
           (cond
-            ((= etype "MTEXT")
-              ;; odstranit stare pokracovaci retezce (kod 3), aby po vlozeni
-              ;; kratsi hodnoty nezustaly za ni viset zbytky puvodniho textu
-              (setq elist (vl-remove-if '(lambda (p) (= (car p) 3)) elist))
-              (entmod (subst (cons 1 *ar-clipboard*) (assoc 1 elist) elist))
+            ((member etype (list "ATTRIB" "ATTDEF" "TEXT" "MTEXT"))
+              (if (= etype "MTEXT")
+                ;; odstranit stare pokracovaci retezce (kod 3), aby po vlozeni
+                ;; kratsi hodnoty nezustaly za ni viset zbytky puvodniho textu
+                (setq elist (vl-remove-if '(lambda (p) (= (car p) 3)) elist))
+              )
+              (foreach code *ar-copy-codes*
+                (setq pair (assoc code *ar-clipboard*))
+                (if pair (setq elist (ar-set-dxf elist code pair)))
+              )
+              (entmod elist)
               (entupd (car sel))
-              (princ (strcat "\n[ATTR-PASTE] Vlozeno (MTEXT): \"" *ar-clipboard* "\""))
-            )
-            ((member etype (list "ATTRIB" "ATTDEF" "TEXT"))
-              (entmod (subst (cons 1 *ar-clipboard*) (assoc 1 elist) elist))
-              (entupd (car sel))
-              (princ (strcat "\n[ATTR-PASTE] Vlozeno (" etype "): \"" *ar-clipboard* "\""))
+              (princ (strcat "\n[ATTR-PASTE] Vlozeno (" etype ", vc. polohy/formatu): \""
+                              (cdr (assoc 1 *ar-clipboard*)) "\""))
             )
             (t
               (princ (strcat "\n[ATTR-PASTE] Vybrana entita (" etype ") neni ATTRIB/ATTDEF/TEXT/MTEXT - nelze vlozit."))
@@ -324,5 +418,5 @@
   (princ)
 )
 
-(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku - prikazy: ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
+(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
 (princ)

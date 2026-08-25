@@ -296,20 +296,31 @@ Samostatný soubor, není součástí hlavní kontroly/opravy – načítá se z
 (`(load "ATTR_RESYNC.lsp")`), typicky jen když zrovna upravuješ definici
 popisového pole nebo jiného bloku s atributy.
 
-- **`ATTR-RESYNC`** – když předefinuješ blok se změněnými atributy (např.
-  přidáš/přejmenuješ/zrušíš atribut v `Pole-1r`), tento příkaz projede
-  všechny existující vložení bloku ve výkresu, spustí nativní `ATTSYNC`
-  a následně vrátí původní polohu/formát atributům, které existovaly už
-  předtím (to samotný `ATTSYNC` neumí – on při synchronizaci vždy přeskládá
-  polohu úplně všech atributů podle aktuální šablony bloku). Pokud je nový
-  atribut náhradou za starý (zrušený), na dotaz zadáš jeho tag a příkaz
-  převezme textovou hodnotu ze starého atributu do nového – řeší to tedy
-  automaticky pro všechna vložení bloku najednou.
+- **`ATTR-SNAPSHOT`** – spusť **PŘED** předěláním bloku (BLOCK/BEDIT+Save).
+  Důvod: AutoCAD si při uložení Block Editoru existující vložení často sám
+  potichu přesynchronizuje ještě dřív, než stihneš spustit `ATTR-RESYNC` –
+  starý atribut (tag, hodnota, poloha) je pak už nenávratně pryč a
+  `ATTR-RESYNC` nemá co nabídnout k přejmenování. `ATTR-SNAPSHOT` proto
+  zazálohuje aktuální stav všech vložení daného bloku do paměti relace
+  ještě před předělávkou.
+- **`ATTR-RESYNC`** – po předělání bloku se změněnými atributy (např.
+  přidáš/přejmenuješ/zrušíš atribut v `Pole-1r`) tento příkaz projede
+  všechna vložení bloku ve výkresu, spustí nativní `ATTSYNC` a následně
+  vrátí původní polohu/formát atributům, které existovaly už předtím (to
+  samotný `ATTSYNC` neumí – on při synchronizaci vždy přeskládá polohu
+  úplně všech atributů podle aktuální šablony bloku). Pokud je nový atribut
+  náhradou za starý (zrušený), na dotaz zadáš jeho tag a příkaz převezme
+  jak textovou hodnotu, tak polohu/formát (výška, rotace, styl, vrstva,
+  barva) ze starého atributu do nového – automaticky pro všechna vložení
+  bloku najednou. Pokud předtím proběhl `ATTR-SNAPSHOT`, použije se
+  zálohovaný stav; jinak aktuální stav v okamžiku spuštění (funguje jen
+  pokud předělávka bloku vložení ještě sama nepřepsala).
 - **`ATTR-COPY`** / **`ATTR-PASTE`** – jednodušší ruční varianta mimo celý
-  resync postup: `ATTR-COPY` na starý atribut/text zapamatuje jeho hodnotu
-  (interně v paměti relace AutoCADu, ne v systémové schránce Windows – je to
-  spolehlivější, nezávisí na OS ani ActiveX), `ATTR-PASTE` na nově přidaný
-  (nebo jakýkoli jiný) atribut/text hodnotu vloží. Funguje na
+  resync postup, pro jeden konkrétní atribut/text mimo blok: `ATTR-COPY`
+  na starý atribut/text zapamatuje obsah i polohu/formát (interně v paměti
+  relace AutoCADu, ne v systémové schránce Windows – je to spolehlivější,
+  nezávisí na OS ani ActiveX), `ATTR-PASTE` na nově přidaný (nebo jakýkoli
+  jiný) atribut/text obsah i polohu vloží. Funguje na
   `ATTRIB`/`ATTDEF`/`TEXT`/`MTEXT`. Postup: než starý atribut smažeš, spusť
   `ATTR-COPY` a klikni na něj; po přidání nového atributu spusť `ATTR-PASTE`
   a klikni na něj.
@@ -440,6 +451,18 @@ pak `CEZ-OPRAVA`).
   ti to nekoliduje s jinou automatizací, kterou už případně máš).
 
 ## Opravy (changelog)
+
+- **`ATTR_RESYNC.lsp`: přidán `ATTR-SNAPSHOT` a oprava přenosu polohy u
+  přejmenovaných atributů.** `ATTR-RESYNC` u nově přejmenovaného atributu
+  (mapování starý tag → nový tag) dřív přenášel jen textovou hodnotu, ne
+  polohu/formát – nový atribut tak zůstal na výchozím místě podle šablony
+  místo na místě starého. Opraveno – přenáší se teď i poloha, výška,
+  rotace, styl, vrstva a barva. Přidán i nový příkaz `ATTR-SNAPSHOT`,
+  který zálohuje stav vložení bloku ještě PŘED jeho předěláním – řeší
+  případ, kdy AutoCAD při uložení Block Editoru existující vložení sám
+  tiše přesynchronizuje dřív, než stihneš spustit `ATTR-RESYNC` (bez
+  zálohy by pak už nebylo z čeho přejmenování nabídnout). `ATTR-COPY`/
+  `ATTR-PASTE` teď také přenáší polohu/formát, ne jen text.
 
 - **Přidáno `ATTR_RESYNC.lsp` – pomocný nástroj pro atributy bloků** (samostatný
   soubor, volitelný `load`): `ATTR-RESYNC` bezpečně dosynchronizuje atributy
