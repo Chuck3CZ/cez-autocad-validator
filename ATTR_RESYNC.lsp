@@ -241,5 +241,88 @@
   (princ)
 )
 
-(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku - prikaz: ATTR-RESYNC")
+
+;; ============================================================================
+;; ATTR-COPY / ATTR-PASTE
+;;
+;; Jednoduchy doplnkovy nastroj pro rucni prenos textove hodnoty mezi
+;; atributy/textem - typicky kdyz rusis stary atribut a chces jeho hodnotu
+;; prenest do nove pridaneho, mimo cely ATTR-RESYNC postup (napr. jen jeden
+;; konkretni atribut, nebo TEXT/MTEXT entita).
+;;
+;; Nejde o systemovou (OS) schranku Windows - hodnota se drzi jen v pameti
+;; aktualni relace AutoCADu (promenna *ar-clipboard*). To je zamerne:
+;; funguje spolehlive bez ohledu na verzi/nastaveni OS schranky a bez zavislosti
+;; na ActiveX/COM.
+;;
+;; POUZITI:
+;;   1. Pred smazanim stareho atributu: spust ATTR-COPY a klikni primo na
+;;      text puvodniho atributu (ne na geometrii bloku).
+;;   2. Smaz stary atribut / pridej novy jak potrebujes.
+;;   3. Spust ATTR-PASTE a klikni na novy (nebo jakykoli jiny) atribut/text -
+;;      jeho hodnota se prepise obsahem ze schranky.
+;;
+;; Funguje na ATTRIB, ATTDEF, TEXT i MTEXT entitach.
+;; ============================================================================
+
+(setq *ar-clipboard* nil)
+
+(defun c:ATTR-COPY ( / sel elist etype val)
+  (setq sel (entsel "\nVyber atribut/text, jehoz hodnotu chces zkopirovat: "))
+  (if (not sel)
+    (princ "\n[ATTR-COPY] Nic nevybrano.")
+    (progn
+      (setq elist (entget (car sel)))
+      (setq etype (cdr (assoc 0 elist)))
+      (if (member etype (list "ATTRIB" "ATTDEF" "TEXT" "MTEXT"))
+        (progn
+          (setq val (cdr (assoc 1 elist)))
+          (setq *ar-clipboard* val)
+          (princ (strcat "\n[ATTR-COPY] Zkopirovano (" etype "): \"" val "\""))
+        )
+        (princ (strcat "\n[ATTR-COPY] Vybrana entita (" etype ") neni ATTRIB/ATTDEF/TEXT/MTEXT - nelze zkopirovat."))
+      )
+    )
+  )
+  (princ)
+)
+
+(defun c:ATTR-PASTE ( / sel elist etype)
+  (cond
+    ((not *ar-clipboard*)
+      (princ "\n[ATTR-PASTE] Schranka je prazdna - nejdriv pouzij ATTR-COPY.")
+    )
+    (t
+      (setq sel (entsel "\nVyber atribut/text, do ktereho chces vlozit zkopirovanou hodnotu: "))
+      (if (not sel)
+        (princ "\n[ATTR-PASTE] Nic nevybrano.")
+        (progn
+          (setq elist (entget (car sel)))
+          (setq etype (cdr (assoc 0 elist)))
+          (cond
+            ((= etype "MTEXT")
+              ;; odstranit stare pokracovaci retezce (kod 3), aby po vlozeni
+              ;; kratsi hodnoty nezustaly za ni viset zbytky puvodniho textu
+              (setq elist (vl-remove-if '(lambda (p) (= (car p) 3)) elist))
+              (entmod (subst (cons 1 *ar-clipboard*) (assoc 1 elist) elist))
+              (entupd (car sel))
+              (princ (strcat "\n[ATTR-PASTE] Vlozeno (MTEXT): \"" *ar-clipboard* "\""))
+            )
+            ((member etype (list "ATTRIB" "ATTDEF" "TEXT"))
+              (entmod (subst (cons 1 *ar-clipboard*) (assoc 1 elist) elist))
+              (entupd (car sel))
+              (princ (strcat "\n[ATTR-PASTE] Vlozeno (" etype "): \"" *ar-clipboard* "\""))
+            )
+            (t
+              (princ (strcat "\n[ATTR-PASTE] Vybrana entita (" etype ") neni ATTRIB/ATTDEF/TEXT/MTEXT - nelze vlozit."))
+            )
+          )
+        )
+      )
+    )
+  )
+  (princ)
+)
+
+(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku - prikazy: ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
 (princ)

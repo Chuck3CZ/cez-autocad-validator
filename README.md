@@ -22,6 +22,7 @@ dodavatele JE (ETE/EDU)**, konkrétně:
 |---|---|
 | `CEZ_ST0093_Validator.lsp` | Hlavní nástroj – příkazy `CEZ-KONTROLA` a `CEZ-OPRAVA` |
 | `CEZ_LAYERS_DATA.lsp` | Datová tabulka 457 hladin, 282 čárových typů a 12 textových stylů extrahovaná přímo z oficiální šablony ČEZ |
+| `ATTR_RESYNC.lsp` | Volitelný pomocný nástroj – bezpečná synchronizace atributů (`ATTR-RESYNC`) po předefinování bloku a ruční přenos hodnoty atributu/textu (`ATTR-COPY`/`ATTR-PASTE`) |
 | `reference/` | Zdrojové dokumenty ČEZ, ze kterých nástroj vychází (standard, návod, šablona, .lin/.ctb soubory) – pro dohledání kontextu, nejsou pro provoz nástroje potřeba |
 
 ## Co nástroj kontroluje
@@ -289,6 +290,30 @@ nepřepíše ani nezruší – jen se na konec přidá volání kontroly.
   z `acaddoc.lsp` (samotné `(load ...)` řádek můžeš nechat, ten jen
   zpřístupní příkazy, bez automatického spouštění).
 
+## Pomocný nástroj pro atributy bloků (`ATTR_RESYNC.lsp`)
+
+Samostatný soubor, není součástí hlavní kontroly/opravy – načítá se zvlášť
+(`(load "ATTR_RESYNC.lsp")`), typicky jen když zrovna upravuješ definici
+popisového pole nebo jiného bloku s atributy.
+
+- **`ATTR-RESYNC`** – když předefinuješ blok se změněnými atributy (např.
+  přidáš/přejmenuješ/zrušíš atribut v `Pole-1r`), tento příkaz projede
+  všechny existující vložení bloku ve výkresu, spustí nativní `ATTSYNC`
+  a následně vrátí původní polohu/formát atributům, které existovaly už
+  předtím (to samotný `ATTSYNC` neumí – on při synchronizaci vždy přeskládá
+  polohu úplně všech atributů podle aktuální šablony bloku). Pokud je nový
+  atribut náhradou za starý (zrušený), na dotaz zadáš jeho tag a příkaz
+  převezme textovou hodnotu ze starého atributu do nového – řeší to tedy
+  automaticky pro všechna vložení bloku najednou.
+- **`ATTR-COPY`** / **`ATTR-PASTE`** – jednodušší ruční varianta mimo celý
+  resync postup: `ATTR-COPY` na starý atribut/text zapamatuje jeho hodnotu
+  (interně v paměti relace AutoCADu, ne v systémové schránce Windows – je to
+  spolehlivější, nezávisí na OS ani ActiveX), `ATTR-PASTE` na nově přidaný
+  (nebo jakýkoli jiný) atribut/text hodnotu vloží. Funguje na
+  `ATTRIB`/`ATTDEF`/`TEXT`/`MTEXT`. Postup: než starý atribut smažeš, spusť
+  `ATTR-COPY` a klikni na něj; po přidání nového atributu spusť `ATTR-PASTE`
+  a klikni na něj.
+
 ## Aktualizace z GitHubu (`CEZ-VERZE`, `CEZ-UPDATE`)
 
 Nástroj umí sám zkontrolovat a stáhnout novou verzi přímo z GitHubu
@@ -415,6 +440,15 @@ pak `CEZ-OPRAVA`).
   ti to nekoliduje s jinou automatizací, kterou už případně máš).
 
 ## Opravy (changelog)
+
+- **Přidáno `ATTR_RESYNC.lsp` – pomocný nástroj pro atributy bloků** (samostatný
+  soubor, volitelný `load`): `ATTR-RESYNC` bezpečně dosynchronizuje atributy
+  existujících vložení bloku po jeho předefinování (zachová ruční polohu/
+  formát, kde je to možné, a umí převzít hodnotu ze zrušeného atributu do
+  nově přejmenovaného). Dále jednoduché `ATTR-COPY`/`ATTR-PASTE` pro ruční
+  přenos textové hodnoty mezi libovolnými atributy/textem (interní paměť
+  relace, nezávislé na systémové schránce Windows). Viz nová sekce
+  "Pomocný nástroj pro atributy bloků" výše.
 
 - **Přidáno: automatické spuštění `CEZ-KONTROLA` při otevření výkresu**
   (`cez-enable-autorun-on-open`, volá se z `acaddoc.lsp`). Používá
