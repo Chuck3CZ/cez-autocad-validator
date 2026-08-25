@@ -314,7 +314,10 @@ popisového pole nebo jiného bloku s atributy.
   barva) ze starého atributu do nového – automaticky pro všechna vložení
   bloku najednou. Pokud předtím proběhl `ATTR-SNAPSHOT`, použije se
   zálohovaný stav; jinak aktuální stav v okamžiku spuštění (funguje jen
-  pokud předělávka bloku vložení ještě sama nepřepsala).
+  pokud předělávka bloku vložení ještě sama nepřepsala). Stačí spustit
+  příkaz a stisknout Enter bez klikání na geometrii – automaticky se
+  použije stejný blok jako u posledního `ATTR-SNAPSHOT` (kliknutím na
+  jiné vložení nebo ručním zadáním názvu lze i tak vybrat jiný blok).
 - **`ATTR-COPY`** / **`ATTR-PASTE`** – jednodušší ruční varianta mimo celý
   resync postup, pro jeden konkrétní atribut/text mimo blok: `ATTR-COPY`
   na starý atribut/text zapamatuje obsah i polohu/formát (interně v paměti
@@ -451,6 +454,16 @@ pak `CEZ-OPRAVA`).
   ti to nekoliduje s jinou automatizací, kterou už případně máš).
 
 ## Opravy (changelog)
+
+- **`ATTR_RESYNC.lsp`: `ATTR-RESYNC` si pamatuje posledně zazálohovaný
+  blok.** Aby nebylo nutné vybírat vložení bloku myší dvakrát (jednou pro
+  `ATTR-SNAPSHOT`, podruhé pro `ATTR-RESYNC`), stačí teď u `ATTR-RESYNC`
+  stisknout Enter bez klikání – automaticky se použije stejný blok jako
+  u posledního `ATTR-SNAPSHOT`. Zpřesněno i zadávání odpovědi na dotaz
+  mapování starý->nový atribut (přijímá i číslo z nabídky, ošetřeny
+  mezery ve vstupu, jasně řečeno že se odpovídá klávesnicí, ne kliknutím
+  myší do výkresu – reálný test ukázal, že přesný název dlouhého tagu
+  se snadno přepíše/zkrátí).
 
 - **`ATTR_RESYNC.lsp`: přidán `ATTR-SNAPSHOT` a oprava přenosu polohy u
   přejmenovaných atributů.** `ATTR-RESYNC` u nově přejmenovaného atributu

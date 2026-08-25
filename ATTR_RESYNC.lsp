@@ -41,9 +41,10 @@
 ;;      ATTR-RESYNC. ATTR-SNAPSHOT zalohuje aktualni stav VSECH vlozeni
 ;;      daneho bloku do pameti relace, aby to nevadilo.
 ;;   1. Predefinuj blok (BLOCK/BEDIT) tak, jak potrebujes.
-;;   2. Spust prikaz ATTR-RESYNC.
-;;   3. Klikni na existujici vlozeni predefinovaneho bloku (na geometrii,
-;;      ne na text atributu), nebo zadej nazev bloku rucne.
+;;   2. Spust prikaz ATTR-RESYNC. Staci stisknout Enter bez kliknuti na
+;;      geometrii - automaticky se pouzije stejny blok jako u posledniho
+;;      ATTR-SNAPSHOT. (Klikem na jine vlozeni, nebo rucnim zadanim nazvu,
+;;      lze i tak vybrat jiny blok.)
 ;;   4. Pro kazdy novy atribut v sablone, ktery jeste zadne vlozeni nema,
 ;;      se skript zepta, jestli je to nahrada za nejaky stary (zruseny)
 ;;      atribut, ze ktereho se ma prevzit text I POLOHU/FORMAT. Odpovedet
@@ -172,6 +173,8 @@
 
 (setq *ar-snapshot* nil)          ; alist: (bname . (list (cons handle saved-attrs)))
 (setq *ar-snapshot-old-tags* nil) ; alist: (bname . list-of-tagu)
+(setq *ar-last-block* nil)        ; nazev bloku posledniho ATTR-SNAPSHOT - ATTR-RESYNC
+                                   ; ho pouzije automaticky, kdyz jen stisknes Enter bez kliknuti
 
 ;; ATTR-SNAPSHOT: spust PRED predefinovanim bloku (BLOCK/BEDIT+Save).
 ;; Duvod: kdyz blok predefinujes pres Block Editor, AutoCAD si existujici
@@ -213,9 +216,11 @@
         (cons (cons bname saved) (vl-remove-if '(lambda (x) (= (car x) bname)) *ar-snapshot*)))
       (setq *ar-snapshot-old-tags*
         (cons (cons bname old-tags) (vl-remove-if '(lambda (x) (= (car x) bname)) *ar-snapshot-old-tags*)))
+      (setq *ar-last-block* bname)
       (princ (strcat "\n[ATTR-SNAPSHOT] Zazalohovano " (itoa (sslength ss)) " vlozeni bloku '" bname
                       "' (" (itoa (length old-tags)) " ruznych tagu)."
-                      " Ted muzes blok bezpecne predefinovat (BLOCK/BEDIT+Save) a pak spustit ATTR-RESYNC -"
+                      " Ted muzes blok bezpecne predefinovat (BLOCK/BEDIT+Save) a pak spustit ATTR-RESYNC"
+                      " (staci Enter bez klikani - pouzije se tento blok automaticky) -"
                       " pouzije tuto zalohu, i kdyz mezitim AutoCAD atributy na vlozenich sam pre-synchronizoval."))
     )
   )
@@ -224,7 +229,11 @@
 
 (defun c:ATTR-RESYNC ( / sel elist0 bname ss i ins new-tags old-tags missing-new missing-old
                        rename-map saved saved-attrs p rec h e elist tag oldpair map-pair srcpair code snap snap-tags)
-  (setq sel (entsel "\nVyber existujici vlozeni (INSERT) predefinovaneho bloku - klikni na geometrii bloku, ne na text atributu: "))
+  (setq sel (entsel
+    (strcat "\nVyber existujici vlozeni (INSERT) predefinovaneho bloku - klikni na geometrii bloku, ne na text atributu"
+            (if *ar-last-block* (strcat " (Enter = pouzit posledne zazalohovany blok '" *ar-last-block* "')") "")
+            ": ")
+  ))
   (setq bname nil)
   (if sel
     (progn
@@ -233,6 +242,12 @@
         (setq bname (cdr (assoc 2 elist0)))
         (princ "\n[ATTR-RESYNC] Vybrana entita neni INSERT (blok) - zadej nazev bloku rucne.")
       )
+    )
+  )
+  (if (and (not bname) *ar-last-block*)
+    (progn
+      (setq bname *ar-last-block*)
+      (princ (strcat "\n[ATTR-RESYNC] Nic nevybrano - pouzivam posledne zazalohovany blok '" bname "'."))
     )
   )
   (if (not bname) (setq bname (getstring T "\nNazev bloku k synchronizaci: ")))
@@ -469,5 +484,5 @@
   (princ)
 )
 
-(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.4) - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
+(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.5) - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
 (princ)
