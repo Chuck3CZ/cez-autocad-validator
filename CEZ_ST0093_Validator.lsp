@@ -261,12 +261,14 @@
 ;; (entmod nad (tblobjname "LAYER" ...)) - spolehlivejsi nez prikazove makro
 ;; "-LAYER", ktere je citlive na presnou posloupnost promptu.
 ;; newlinetype = nil znamena "nemenit carovy typ hladiny".
-(defun cez-layer-set-color-linetype (name newcolor newlinetype / lname elist)
+(defun cez-layer-set-color-linetype (name newcolor newlinetype / lname elist oldcolor)
   (setq lname (tblobjname "LAYER" name))
   (if lname
     (progn
       (setq elist (entget lname))
-      (setq elist (subst (cons 62 newcolor) (assoc 62 elist) elist))
+      (setq oldcolor (cdr (assoc 62 elist)))
+      (setq elist (subst (cons 62 (if (< oldcolor 0) (- newcolor) newcolor))
+                          (assoc 62 elist) elist))
       (if newlinetype
         (setq elist (subst (cons 6 newlinetype) (assoc 6 elist) elist))
       )
@@ -372,7 +374,6 @@
   (while tbl
     (setq name (cdr (assoc 2 tbl))
           font (cdr (assoc 3 tbl)))
-    (if (= name "") (setq name (cdr (assoc 2 tbl))))
     (setq rec (cez-textstyle-lookup name))
     (cond
       ((= name "Standard")
@@ -500,14 +501,14 @@
 )
 
 (defun cez-lokalita-edu-p (lok) (member lok (list "EDU" "JE Dukovany" "Dukovany")))
-(defun cez-lokalita-ete-p (lok) (member lok (list "ETE" "JE Temel\U+00EDn" "Temel\U+00EDn")))
+(defun cez-lokalita-ete-p (lok) (member lok (list "ETE" "JE Temel\U+00EDn" "Temel\U+00EDn" "JE Temelin" "Temelin")))
 
 ;; Zname priklady kodu TYP dle VP C kap. 5.1.1 (neni to nutne uplny seznam - plny
 ;; ciselnik je ve volne priloze A, kterou nemame k dispozici)
 (setq *cez-typ-priklady* (list "H16T" "H16S" "PPPt" "PPPs" "H01T" "H01S" "EDST" "EDSS"))
 
 (defun cez-check-titleblock (fix-p / ramecek-list pole-list ins attrs archc lokalita nazev1 ktd stupen cislo-akce datum
-                              archc-clean n-problems val pair so-dps typ-val bname pole-plne-p povinna-pole)
+                              archc-clean n-problems val pair so-dps typ-val bname pole-plne-p povinna-pole e-archc)
   (cez-log "\n=== 4) KONTROLA RAMECKU A POPISOVEHO POLE ===")
   (setq ramecek-list (cez-collect-inserts-by-name (list "Ramecek" "R\U+00E1me\U+010Dek" "A0" "A0-1" "A0-2" "A1" "A1.0" "A1-2"
                                                           "A1-3" "A1-4" "A2" "A2.0" "A2.1" "A2-3" "A2-4" "A2-5" "A2-6"
@@ -563,7 +564,9 @@
               ((/= archc archc-clean)
                 (if fix-p
                   (progn
-                    (entmod (subst (cons 1 archc-clean) (cons 1 archc) (entget (cez-find-attrib-ent ins "ARCH_C"))))
+                    (setq e-archc (cez-find-attrib-ent ins "ARCH_C"))
+                    (entmod (subst (cons 1 archc-clean) (cons 1 archc) (entget e-archc)))
+                    (entupd e-archc)
                     (cez-fix (strcat "ARCH_C '" archc "' -> '" archc-clean "' (velka pismena, bez mezer)."))
                   )
                   (cez-warn (strcat "Dodavatelske cislo '" archc "' by melo byt '" archc-clean
@@ -781,8 +784,9 @@
         (setq ent (ssname ss i))
         (setq elist (entget ent))
         (setq etype (cdr (assoc 0 elist)))
-        ;; preskocit netisknutelne/pomocne objekty a ATTRIB (ty se resi v cez-check-titleblock)
-        (if (not (member etype (list "ATTDEF" "ATTRIB" "VIEWPORT")))
+        ;; preskocit netisknutelne/pomocne objekty (ATTRIB se kontroluje take - viditelne
+        ;; vyplnene atributy v blocich maji vlastni tisknutelnou barvu jako kterakoli entita)
+        (if (not (member etype (list "ATTDEF" "VIEWPORT")))
           (progn
             (setq n-total (1+ n-total))
             (setq layer (cdr (assoc 8 elist)))
@@ -1186,6 +1190,7 @@
                 (if e-skryte
                   (progn
                     (entmod (subst (cons 1 skryte-clean) (cons 1 skryte) (entget e-skryte)))
+                    (entupd e-skryte)
                     (cez-fix (strcat "OZNA\U+010CEN\U+00CD SKRYTE_OZNACENI '" skryte "' -> '" skryte-clean
                                       "' (odstraneny mezery). Nalezeno na: " (cez-entity-loc-str ins)))
                   )
@@ -1348,7 +1353,7 @@
                     "entit uvnitr bloku prevedeno: " (itoa n-entities) "."))
 )
 
-(defun cez-convert-basic-colors ( / tbl name color newcol n-layers ss i ent elist pair-c col2 newcol2 n-entities)
+(defun cez-convert-basic-colors ( / tbl name color newcol n-layers ss i ent elist pair-c col2 newcol2 n-entities etype2)
   (setq n-layers 0 n-entities 0)
   ;; hladiny
   (setq tbl (tblnext "LAYER" T))
@@ -1371,8 +1376,8 @@
     (progn
       (setq i 0)
       (while (< i (sslength ss))
-        (setq ent (ssname ss i) elist (entget ent))
-        (if (not (member (cdr (assoc 0 elist)) (list "ATTDEF" "ATTRIB" "VIEWPORT")))
+        (setq ent (ssname ss i) elist (entget ent) etype2 (cdr (assoc 0 elist)))
+        (if (not (member etype2 (list "ATTDEF" "VIEWPORT")))
           (progn
             (setq pair-c (assoc 62 elist))
             (if pair-c
@@ -1382,6 +1387,7 @@
                 (if newcol2
                   (progn
                     (cez-set-dxf ent 62 newcol2)
+                    (if (= etype2 "ATTRIB") (entupd ent))
                     (setq n-entities (1+ n-entities))
                   )
                 )
@@ -1431,6 +1437,8 @@
       (cez-log-silent "@@POCET_POZOR@@")
       (cez-log "============================================================")
 
+      (if fix-p (command "_.UNDO" "_BE"))
+
       (cez-check-layers fix-p)
       (cez-check-linetypes)
       (cez-check-textstyles)
@@ -1476,6 +1484,7 @@
         (princ "\n[CEZ] Log se nepodarilo zapsat (zkontroluj prava k zapisu do slozky vykresu).")
       )
       (if fix-p (command "._REGEN"))
+      (if fix-p (command "_.UNDO" "_E"))
       (princ)
     )
   )
@@ -1636,6 +1645,8 @@
           (princ "\n[CEZ] Stazeni CEZ_ST0093_Validator.lsp selhalo - aktualizace preskocena."))
         ((not content-data)
           (princ "\n[CEZ] Stazeni CEZ_LAYERS_DATA.lsp selhalo - aktualizace preskocena."))
+        ((not (and (cez-extract-version content-main) (cez-extract-version content-data)))
+          (princ "\n[CEZ] Stazeny soubor neobsahuje platnou verzi - aktualizace preskocena."))
         (t
           (setq f (open local-main "w"))
           (write-line content-main f)
