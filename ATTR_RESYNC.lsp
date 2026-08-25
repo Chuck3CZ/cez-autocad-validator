@@ -176,6 +176,56 @@
 (setq *ar-last-block* nil)        ; nazev bloku posledniho ATTR-SNAPSHOT - ATTR-RESYNC
                                    ; ho pouzije automaticky, kdyz jen stisknes Enter bez kliknuti
 
+;; Zaloha v pameti relace (*ar-snapshot* atd.) se ztrati pri restartu AutoCADu
+;; NEBO pri znovu-nacteni tohoto souboru (kazdy (load ...) prepise vsechny
+;; (setq *ar-... nil) vyse zpatky na prazdno) - proto se zaloha zaroven uklada
+;; i do souboru vedle aktualniho vykresu. ATTR-RESYNC pak umi zalohu nacist
+;; ze souboru, i kdyz mezitim v pameti zmizela.
+(defun ar-snapshot-file ( / )
+  (strcat (getvar "DWGPREFIX") (vl-filename-base (getvar "DWGNAME")) "_ATTR_SNAPSHOT.dat")
+)
+
+(defun ar-write-snapshot-file ( / f)
+  (setq f (open (ar-snapshot-file) "w"))
+  (if f
+    (progn
+      (write-line
+        (vl-prin1-to-string (list *ar-snapshot* *ar-snapshot-old-tags* *ar-last-block*))
+        f
+      )
+      (close f)
+      T
+    )
+  )
+)
+
+;; Nacte zalohu ze souboru DO pameti (*ar-snapshot* atd.), pokud soubor
+;; existuje a lze precist. Vraci T pri uspechu.
+(defun ar-read-snapshot-file ( / f s data ok)
+  (setq ok nil)
+  (if (findfile (ar-snapshot-file))
+    (progn
+      (setq f (open (ar-snapshot-file) "r"))
+      (if f
+        (progn
+          (setq s (read-line f))
+          (close f)
+          (if s
+            (progn
+              (setq data (read s))
+              (setq *ar-snapshot* (car data))
+              (setq *ar-snapshot-old-tags* (cadr data))
+              (setq *ar-last-block* (caddr data))
+              (setq ok T)
+            )
+          )
+        )
+      )
+    )
+  )
+  ok
+)
+
 ;; ATTR-SNAPSHOT: spust PRED predefinovanim bloku (BLOCK/BEDIT+Save).
 ;; Duvod: kdyz blok predefinujes pres Block Editor, AutoCAD si existujici
 ;; vlozeni casto tise sam pre-synchronizuje uz pri ulozeni editoru - stary
@@ -217,6 +267,12 @@
       (setq *ar-snapshot-old-tags*
         (cons (cons bname old-tags) (vl-remove-if '(lambda (x) (= (car x) bname)) *ar-snapshot-old-tags*)))
       (setq *ar-last-block* bname)
+      (if (ar-write-snapshot-file)
+        (princ (strcat "\n[ATTR-SNAPSHOT] DEBUG: zaloha ulozena i do souboru '" (ar-snapshot-file)
+                        "' (prezije reload/restart)."))
+        (princ (strcat "\n[ATTR-SNAPSHOT] DEBUG: VAROVANI - zalohu se nepodarilo zapsat do souboru '"
+                        (ar-snapshot-file) "' (zustava jen v pameti relace - reload/restart AutoCADu ji smaze)."))
+      )
       (princ (strcat "\n[ATTR-SNAPSHOT] Zazalohovano " (itoa (sslength ss)) " vlozeni bloku '" bname
                       "' (" (itoa (length old-tags)) " ruznych tagu)."
                       " Ted muzes blok bezpecne predefinovat (BLOCK/BEDIT+Save) a pak spustit ATTR-RESYNC"
@@ -229,6 +285,18 @@
 
 (defun c:ATTR-RESYNC ( / sel elist0 bname ss i ins new-tags old-tags missing-new missing-old
                        rename-map saved saved-attrs p rec h e elist tag oldpair map-pair srcpair code snap snap-tags)
+  ;; Pokud v pameti relace neni zadna zaloha (napr. proto, ze doslo mezitim
+  ;; k reloadu tohoto souboru nebo restartu AutoCADu), zkusit ji nacist ze
+  ;; souboru vedle vykresu, kam ji ATTR-SNAPSHOT ukladal.
+  (if (not *ar-last-block*)
+    (if (ar-read-snapshot-file)
+      (princ (strcat "\n[ATTR-RESYNC] DEBUG: zaloha v pameti chybela, nactena ze souboru '"
+                      (ar-snapshot-file) "' - posledni zazalohovany blok: '" *ar-last-block* "'."))
+      (princ (strcat "\n[ATTR-RESYNC] DEBUG: zadna zaloha v pameti ani v souboru '" (ar-snapshot-file)
+                      "' - pravdepodobne jsi jeste nespustil/a ATTR-SNAPSHOT (nebo pro jiny vykres)."))
+    )
+    (princ (strcat "\n[ATTR-RESYNC] DEBUG: v pameti nalezena zaloha, posledni zazalohovany blok: '" *ar-last-block* "'."))
+  )
   (setq sel (entsel
     (strcat "\nVyber existujici vlozeni (INSERT) predefinovaneho bloku - klikni na geometrii bloku, ne na text atributu"
             (if *ar-last-block* (strcat " (Enter = pouzit posledne zazalohovany blok '" *ar-last-block* "')") "")
@@ -251,6 +319,8 @@
     )
   )
   (if (not bname) (setq bname (getstring T "\nNazev bloku k synchronizaci: ")))
+  (princ (strcat "\n[ATTR-RESYNC] DEBUG: pracuji s blokem '" bname "'. Zaloha pro tento blok v pameti: "
+                  (if (assoc bname *ar-snapshot*) "ANO" "NE") "."))
 
   (cond
     ((not (tblsearch "BLOCK" bname))
@@ -484,5 +554,5 @@
   (princ)
 )
 
-(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.5) - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
+(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.6) - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
 (princ)

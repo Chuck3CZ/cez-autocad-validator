@@ -455,6 +455,16 @@ pak `CEZ-OPRAVA`).
 
 ## Opravy (changelog)
 
+- **`ATTR_RESYNC.lsp`: záloha teď přežije reload souboru i restart AutoCADu.**
+  `*ar-last-block*`/zálohovaná data žila jen v paměti relace - jakýkoli
+  další `(load ...)` tohoto souboru (např. při stahování nové verze) je
+  vynuloval, takže `ATTR-RESYNC` pak nic nenašel a na mapování se
+  vůbec nezeptal. `ATTR-SNAPSHOT` teď zálohu ukládá i do souboru vedle
+  aktuálního výkresu (`<NAZEV_VYKRESU>_ATTR_SNAPSHOT.dat`) a `ATTR-RESYNC`
+  ho odtud automaticky načte, pokud v paměti nic nenajde. Přidány i DEBUG
+  výpisy o tom, odkud se záloha vzala (paměť/soubor/nikde) a jestli se
+  pro vybraný blok použije.
+
 - **`ATTR_RESYNC.lsp`: `ATTR-RESYNC` si pamatuje posledně zazálohovaný
   blok.** Aby nebylo nutné vybírat vložení bloku myší dvakrát (jednou pro
   `ATTR-SNAPSHOT`, podruhé pro `ATTR-RESYNC`), stačí teď u `ATTR-RESYNC`
