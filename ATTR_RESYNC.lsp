@@ -259,6 +259,15 @@
           )
 
           (setq rename-map (if (and missing-new missing-old) (ar-ask-rename-map missing-new missing-old) '()))
+          (if rename-map
+            (progn
+              (princ "\n[ATTR-RESYNC] Namapovano (novy tag -> stary tag, hodnota+poloha se prevezme):")
+              (foreach map-pair rename-map
+                (princ (strcat "\n  '" (car map-pair) "' <- '" (cdr map-pair) "'"))
+              )
+            )
+            (princ "\n[ATTR-RESYNC] Zadne mapovani novy<->stary atribut (nebylo co nabidnout, nebo jsi vsechno preskocil Enterem).")
+          )
 
           (command "_.UNDO" "_BE")
           (command "_ATTSYNC" "_Name" bname "")
@@ -291,9 +300,19 @@
                       ;; tagu vyse) - ATTSYNC u prejmenovaneho tagu zadnou puvodni
                       ;; hodnotu ani polohu neresi, je to zcela novy atribut
                       (setq map-pair (assoc tag rename-map))
+                      (if (not map-pair)
+                        (princ (strcat "\n[ATTR-RESYNC] DEBUG: atribut '" tag
+                                        "' neni v mapovani - ponechana vychozi hodnota ze sablony (\""
+                                        (cdr (assoc 1 elist)) "\")."))
+                      )
                       (if map-pair
                         (progn
                           (setq srcpair (assoc (cdr map-pair) saved-attrs))
+                          (if (not srcpair)
+                            (princ (strcat "\n[ATTR-RESYNC] DEBUG: atribut '" tag
+                                            "' je namapovan na '" (cdr map-pair)
+                                            "', ale ten v zaloze nenalezen (?) - ponechana vychozi hodnota."))
+                          )
                           (if srcpair
                             (progn
                               (setq srcpair (cdr srcpair))
@@ -302,6 +321,9 @@
                               )
                               (entmod elist)
                               (entupd e)
+                              (princ (strcat "\n[ATTR-RESYNC] DEBUG: atribut '" tag
+                                              "' <- '" (cdr map-pair) "', hodnota nyni: \""
+                                              (cdr (assoc 1 srcpair)) "\""))
                             )
                           )
                         )
