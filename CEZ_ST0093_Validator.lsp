@@ -70,6 +70,12 @@
 ;;                    viz sekce 8 nize a README.md ("Automaticke nacitani
 ;;                    a aktualizace")
 ;;
+;; Funkce cez-enable-autorun-on-open (volana z acaddoc.lsp, NENI aktivni
+;; sama od sebe) zapne automaticke spusteni CEZ-KONTROLA pri KAZDEM
+;; otevreni/zalozeni vykresu, vc. (alert) upozorneni pri nalezenych
+;; problemech - viz sekce 9 nize a README.md ("Automaticke spusteni
+;; kontroly pri otevreni vykresu").
+;;
 ;; Co se OPRAVUJE automaticky (CEZ-OPRAVA):
 ;;   - hladina existujici v oficialni tabulce, ale s jinou barvou/carovym
 ;;     typem nez predepisuje sablona -> nastavi se spravna barva/carovy typ
@@ -147,7 +153,7 @@
 (vl-load-com)
 
 ;; Verze tohoto nastroje a umisteni na GitHubu (pro CEZ-VERZE / CEZ-UPDATE)
-(setq *cez-validator-version* "1.3.0")
+(setq *cez-validator-version* "1.4.0")
 (setq *cez-github-repo* "Chuck3CZ/cez-autocad-validator")
 (setq *cez-github-branch* "main")
 
@@ -1680,6 +1686,55 @@
 
 (defun c:CEZ-KONTROLA ( / ) (cez-run nil) (princ))
 (defun c:CEZ-OPRAVA ( / ) (cez-run T) (princ))
+
+;; ----------------------------------------------------------------------
+;; 9) Automaticke spusteni CEZ-KONTROLA pri KAZDEM otevreni/zalozeni vykresu
+;;
+;; NENI aktivni samo od sebe - musi se explicitne zapnout, viz README.md,
+;; sekce "Automaticke spusteni kontroly pri otevreni vykresu". Duvod: tohle
+;; meni chovani AutoCADu (spousti prikaz bez pozadani), coz by nemelo byt
+;; prekvapive, pokud si to uzivatel vyslovne nezapnul.
+;;
+;; Pouziva se bezpecne zretezeni funkce S::STARTUP - standardni AutoLISP
+;; mechanismus, ktery AutoCAD zavola automaticky po nacteni acaddoc.lsp
+;; PRO KAZDY VYKRES ZNOVU (na rozdil od Startup Suite/acad.lsp, ktere se
+;; nactou jen jednou pri spusteni AutoCADu). Proto MUSI byt volani funkce
+;; cez-enable-autorun-on-open v acaddoc.lsp, ne (jen) ve Startup Suite -
+;; jinak by se S::STARTUP znovu neregistroval pro druhy a dalsi otevreny
+;; vykres. Zretezeni pres defun-q-list-ref/defun-q-list-set (standardni
+;; dokumentovany AutoLISP mechanismus prave pro tento ucel) zajisti, ze se
+;; neprepise/nezrusi jina existujici automatizace ve S::STARTUP (napr.
+;; firemni CAD sablona nebo jiny doplnek) - pouze se na konec pripoji
+;; volani teto kontroly.
+;;
+;; POZOR: stejne jako CEZ-UPDATE, ani tato cast nebyla odzkousena v
+;; realnem AutoCADu.
+;; ----------------------------------------------------------------------
+
+;; Spusti CEZ-KONTROLA a pokud najde problemy, navic zobrazi (alert),
+;; aby si toho uzivatel vsiml i bez sledovani prikazove radky.
+(defun cez-auto-check-and-notify ( / )
+  (c:CEZ-KONTROLA)
+  (if (and (boundp '*cez-pozor-count*) (> *cez-pozor-count* 0))
+    (alert (strcat "CEZ kontrola vykresu:\n\nNalezeno " (itoa *cez-pozor-count*)
+                    " chyb neodpovidajicich metodice CEZ_ST_0093.\n\n"
+                    "Detail viz prikazova radka nebo log soubor vedle vykresu."))
+  )
+  (princ)
+)
+
+;; Zapne automaticke spusteni kontroly pri kazdem otevreni vykresu -
+;; zavolej tuto funkci z acaddoc.lsp (viz README.md).
+(defun cez-enable-autorun-on-open ( / )
+  (if (not (member 'S::STARTUP (atoms-family 1)))
+    (defun-q S::STARTUP ())
+  )
+  (defun-q-list-set 'S::STARTUP
+    (append (defun-q-list-ref 'S::STARTUP) (list '(cez-auto-check-and-notify)))
+  )
+  (princ "\n[CEZ] Automaticke spusteni CEZ-KONTROLA pri otevreni vykresu zapnuto (S::STARTUP).")
+  (princ)
+)
 
 (princ (strcat "\n[CEZ] Nacten validator/opravator CEZ_ST_0093 v" *cez-validator-version*
                " - prikazy: CEZ-KONTROLA, CEZ-OPRAVA, CEZ-VERZE, CEZ-UPDATE"))

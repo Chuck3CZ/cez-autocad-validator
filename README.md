@@ -248,6 +248,47 @@ Support File Search Path) a přidej řádek:
 danou složku důvěryhodnou cestu povolovat, což už řeší krok 2 v Instalaci
 výše).
 
+## Automatické spuštění kontroly při otevření výkresu
+
+Kromě zpřístupnění příkazů (Instalace výše) jde nástroj nastavit tak, aby
+**sám spustil `CEZ-KONTROLA`** pokaždé, když se otevře nebo založí výkres –
+nemusíš na nic klikat, kontrola se odehraje na pozadí a pokud najde
+problém, vyskočí upozornění (`alert`), aby sis ho všiml i bez sledování
+příkazové řádky.
+
+**Není to zapnuté samo od sebe** – je to chování, které mění, jak se
+AutoCAD chová (spouští příkaz bez vyžádání), takže by to nemělo překvapit
+nikoho, kdo si to výslovně nezapnul.
+
+**Zapnutí – vyžaduje `acaddoc.lsp`** (ne jen Startup Suite – `S::STARTUP`
+hook, který se k tomu používá, se musí registrovat znovu pro každý
+jednotlivý výkres, a to zaručeně udělá jen `acaddoc.lsp`, který se načítá
+per-výkres, na rozdíl od Startup Suite, které se načte jen jednou za
+spuštění AutoCADu):
+
+```lisp
+(load "C:/cesta/k/CEZ_ST0093_Validator.lsp")
+(cez-enable-autorun-on-open)
+```
+
+Funkce `cez-enable-autorun-on-open` bezpečně **připojí** volání kontroly
+na konec `S::STARTUP` (přes standardní AutoLISP mechanismus
+`defun-q-list-ref`/`defun-q-list-set`), takže pokud už `S::STARTUP`
+používáš pro něco jiného (firemní CAD šablona, jiný doplněk), nic ti to
+nepřepíše ani nezruší – jen se na konec přidá volání kontroly.
+
+**Než to zapneš, zvaž:**
+- Kontrola se spustí na **úplně každém** otevřeném/založeném výkresu,
+  včetně prázdných výkresů nezaložených na šabloně ČEZ – na takových bude
+  hlásit spoustu očekávaných věcí (chybějící rámeček, popisové pole,
+  neznámé hladiny...). To může být rušivé, pokud často pracuješ i na
+  jiných věcech než na CEZ dokumentaci.
+- Log soubor (`<název_výkresu>_CEZ_kontrola.log`) se vytvoří u **každého**
+  otevřeného výkresu.
+- **Vypnutí:** stačí smazat/zakomentovat řádek `(cez-enable-autorun-on-open)`
+  z `acaddoc.lsp` (samotné `(load ...)` řádek můžeš nechat, ten jen
+  zpřístupní příkazy, bez automatického spouštění).
+
 ## Aktualizace z GitHubu (`CEZ-VERZE`, `CEZ-UPDATE`)
 
 Nástroj umí sám zkontrolovat a stáhnout novou verzi přímo z GitHubu
@@ -366,8 +407,21 @@ pak `CEZ-OPRAVA`).
   prohlížeč). Pro takový případ je v README sekce "Ruční aktualizace",
   která funguje vždy. Vyzkoušej nejdřív `CEZ-VERZE` (jen čte), až pak
   `CEZ-UPDATE` (přepisuje soubory na disku).
+- **`cez-enable-autorun-on-open` (bod 9, automatické spuštění na otevření
+  výkresu)** nebyla odzkoušena v reálném AutoCADu. Bezpečné zřetězení přes
+  `defun-q-list-ref`/`defun-q-list-set` je standardní dokumentovaný
+  AutoLISP mechanismus přesně pro tento účel, ale doporučuji nejdřív
+  zkontrolovat, že `S::STARTUP` funguje očekávaně i po zapnutí (např. že
+  ti to nekoliduje s jinou automatizací, kterou už případně máš).
 
 ## Opravy (changelog)
+
+- **Přidáno: automatické spuštění `CEZ-KONTROLA` při otevření výkresu**
+  (`cez-enable-autorun-on-open`, volá se z `acaddoc.lsp`). Používá
+  bezpečné zřetězení `S::STARTUP` (nepřepíše jinou existující
+  automatizaci), a pokud kontrola najde problém, zobrazí `alert` s počtem
+  nálezů. Viz nová sekce "Automatické spuštění kontroly při otevření
+  výkresu" výše.
 
 - **Oprava `CEZ-UPDATE`/`CEZ-VERZE`: chyba "nelze se připojit k internetu"
   za firemní proxy.** Původní implementace používala
