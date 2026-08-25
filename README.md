@@ -456,6 +456,16 @@ pak `CEZ-OPRAVA`).
 
 ## Opravy (changelog)
 
+- **`ATTR_RESYNC.lsp`: oprava detekce chybějícího atributu u smíšených vložení.**
+  Podle druhého debug logu: pokud jedno vložení bloku už nový atribut mělo
+  (např. bylo vloženo až po předělání šablony) a jiné (starší) vložení ne,
+  nástroj to počítal globálně přes všechna vložení najednou - atribut tak
+  vypadal jako "nechybí", otázka na přejmenování se vůbec neobjevila a to
+  starší vložení o převzetí hodnoty/polohy přišlo. Teď se atribut považuje
+  za chybějící, pokud ho nemá byť jen jedno vložení - přejmenování se pak
+  aplikuje jen tam, kde je skutečně potřeba, ostatní vložení zůstanou
+  nedotčená.
+
 - **`ATTR_RESYNC.lsp`: `ATTR-RESYNC` je teď opravdu samostatný, `ATTR-SNAPSHOT`
   se stal volitelným.** Podle upřesnění od uživatele samotné předělání bloku
   (BLOCK/BEDIT+Save) atributy na existujících vloženích nijak nemění – to

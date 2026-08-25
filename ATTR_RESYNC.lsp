@@ -342,13 +342,24 @@
             (setq i (1+ i))
           )
 
-          (setq missing-new (vl-remove-if '(lambda (x) (member x old-tags)) new-tags))
+          ;; POZOR: "missing-new" nesmi byt pocitano proti globalnimu old-tags
+          ;; (sjednoceni pres VSECHNA vlozeni)! Kdyby uz JEDNO vlozeni novy tag
+          ;; melo (napr. bylo vlozeno az po predelani bloku), globalne by tag
+          ;; "chybejici" nebyl, ale JINA (starsi) vlozeni, ktera ho jeste nemaji,
+          ;; by tak o nabidku na prejmenovani tise prisla. Tag proto pocitame
+          ;; jako "missing-new" uz kdyz chybi alespon jednomu vlozeni.
+          (setq missing-new
+            (vl-remove-if-not
+              '(lambda (x) (vl-some '(lambda (rec) (not (assoc x (cdr rec)))) saved))
+              new-tags
+            )
+          )
           (setq missing-old (vl-remove-if '(lambda (x) (member x new-tags)) old-tags))
 
           (princ (strcat "\n[ATTR-RESYNC] Blok '" bname "': " (itoa (sslength ss)) " vlozeni, "
                           (itoa (length new-tags)) " atributu v aktualni sablone."))
           (if missing-new
-            (princ (strcat "\n  Nove atributy bez existujici hodnoty: " (ar-join missing-new ", ")))
+            (princ (strcat "\n  Nove atributy chybejici alespon u jednoho vlozeni: " (ar-join missing-new ", ")))
           )
           (if missing-old
             (princ (strcat "\n  Stare atributy mimo novou sablonu (budou smazany, pokud nebudou pouzity jako zdroj prejmenovani): "
@@ -537,5 +548,5 @@
   (princ)
 )
 
-(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.7) - prikazy: ATTR-RESYNC (samostatny), ATTR-SNAPSHOT (volitelny), ATTR-COPY, ATTR-PASTE")
+(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.8) - prikazy: ATTR-RESYNC (samostatny), ATTR-SNAPSHOT (volitelny), ATTR-COPY, ATTR-PASTE")
 (princ)
