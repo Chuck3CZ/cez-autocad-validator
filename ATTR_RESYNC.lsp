@@ -115,14 +115,18 @@
   (foreach newtag missing-new
     (if avail
       (progn
+        ;; getstring s T = povoli mezery ve vstupu (jinak by AutoCAD bral
+        ;; mezera jako Enter a vstup by se tise usekl uz na ni)
         (setq choice
-          (getstring
+          (getstring T
             (strcat "\nNovy atribut '" newtag "' - je to nahrada za stary atribut? "
                     "Zadej TAG stareho atributu [" (ar-join avail "/") "] "
                     "(Enter = preskocit, pouzije se vychozi hodnota ze sablony): ")
           )
         )
-        (setq choice (strcase choice))
+        ;; oriznout pripadne nechtene mezery na zacatku/konci (napr. z
+        ;; kopirovani/vkladani textu) a teprve pak porovnat bez ohledu na velikost pismen
+        (setq choice (strcase (vl-string-trim " \t" choice)))
         (if (/= choice "")
           (progn
             (setq realtag (car (vl-remove-if-not '(lambda (x) (= (strcase x) choice)) avail)))
@@ -130,8 +134,9 @@
               (progn
                 (setq map (cons (cons newtag realtag) map))
                 (setq avail (vl-remove realtag avail))
+                (princ (strcat "\n  [ATTR-RESYNC] OK: '" newtag "' <- '" realtag "' (prevezme hodnotu i polohu)."))
               )
-              (princ (strcat "\n  [ATTR-RESYNC] Tag '" choice "' nenalezen mezi nabidkou - preskoceno."))
+              (princ (strcat "\n  [ATTR-RESYNC] Tag '" choice "' nenalezen mezi nabidkou - preskoceno pro '" newtag "'."))
             )
           )
         )
@@ -440,5 +445,5 @@
   (princ)
 )
 
-(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
+(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.2) - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
 (princ)
