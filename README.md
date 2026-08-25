@@ -296,28 +296,29 @@ Samostatný soubor, není součástí hlavní kontroly/opravy – načítá se z
 (`(load "ATTR_RESYNC.lsp")`), typicky jen když zrovna upravuješ definici
 popisového pole nebo jiného bloku s atributy.
 
-- **`ATTR-SNAPSHOT`** – spusť **PŘED** předěláním bloku (BLOCK/BEDIT+Save).
-  Důvod: AutoCAD si při uložení Block Editoru existující vložení často sám
-  potichu přesynchronizuje ještě dřív, než stihneš spustit `ATTR-RESYNC` –
-  starý atribut (tag, hodnota, poloha) je pak už nenávratně pryč a
-  `ATTR-RESYNC` nemá co nabídnout k přejmenování. `ATTR-SNAPSHOT` proto
-  zazálohuje aktuální stav všech vložení daného bloku do paměti relace
-  ještě před předělávkou.
-- **`ATTR-RESYNC`** – po předělání bloku se změněnými atributy (např.
-  přidáš/přejmenuješ/zrušíš atribut v `Pole-1r`) tento příkaz projede
+- **`ATTR-RESYNC`** – **samostatný příkaz, `ATTR-SNAPSHOT` k němu není
+  potřeba.** Samotné předělání bloku (BLOCK/BEDIT+Save) ani vkládání nových
+  vložení atributy na už existujících (starších) vloženích nijak nemění –
+  to udělá až synchronizace, kterou spouští teprve tento příkaz. Můžeš tedy
+  klidně blok předělat, mezitím vložit libovolně mnoho nových vložení, a
+  `ATTR-RESYNC` spustit až později na všechna najednou. Příkaz projede
   všechna vložení bloku ve výkresu, spustí nativní `ATTSYNC` a následně
   vrátí původní polohu/formát atributům, které existovaly už předtím (to
   samotný `ATTSYNC` neumí – on při synchronizaci vždy přeskládá polohu
   úplně všech atributů podle aktuální šablony bloku). Pokud je nový atribut
-  náhradou za starý (zrušený), na dotaz zadáš jeho tag a příkaz převezme
-  jak textovou hodnotu, tak polohu/formát (výška, rotace, styl, vrstva,
-  barva) ze starého atributu do nového – automaticky pro všechna vložení
-  bloku najednou. Pokud předtím proběhl `ATTR-SNAPSHOT`, použije se
-  zálohovaný stav; jinak aktuální stav v okamžiku spuštění (funguje jen
-  pokud předělávka bloku vložení ještě sama nepřepsala). Stačí spustit
-  příkaz a stisknout Enter bez klikání na geometrii – automaticky se
-  použije stejný blok jako u posledního `ATTR-SNAPSHOT` (kliknutím na
-  jiné vložení nebo ručním zadáním názvu lze i tak vybrat jiný blok).
+  náhradou za starý (zrušený), na dotaz zadáš jeho tag (nebo číslo z
+  nabídky) a příkaz převezme jak textovou hodnotu, tak polohu/formát
+  (výška, rotace, styl, vrstva, barva) ze starého atributu do nového –
+  automaticky pro všechna vložení bloku najednou. Po prvním spuštění si
+  příkaz pamatuje naposledy použitý blok – stačí příště jen Enter bez
+  klikání na geometrii (kliknutím na jiné vložení nebo ručním zadáním
+  názvu lze i tak vybrat jiný blok).
+- **`ATTR-SNAPSHOT`** – volitelný doplňkový příkaz, v běžném provozu ho
+  spouštět nemusíš. Hodí se jen jako pojistka pro případ, že by na výkresu
+  mezitím proběhl ruční `ATTSYNC` (např. od někoho jiného) ještě předtím,
+  než stihneš spustit `ATTR-RESYNC` – pak `ATTR-RESYNC` použije tuhle
+  zálohu (uloženou i do souboru vedle výkresu, přežije reload/restart)
+  místo už změněného aktuálního stavu.
 - **`ATTR-COPY`** / **`ATTR-PASTE`** – jednodušší ruční varianta mimo celý
   resync postup, pro jeden konkrétní atribut/text mimo blok: `ATTR-COPY`
   na starý atribut/text zapamatuje obsah i polohu/formát (interně v paměti
@@ -454,6 +455,16 @@ pak `CEZ-OPRAVA`).
   ti to nekoliduje s jinou automatizací, kterou už případně máš).
 
 ## Opravy (changelog)
+
+- **`ATTR_RESYNC.lsp`: `ATTR-RESYNC` je teď opravdu samostatný, `ATTR-SNAPSHOT`
+  se stal volitelným.** Podle upřesnění od uživatele samotné předělání bloku
+  (BLOCK/BEDIT+Save) atributy na existujících vloženích nijak nemění – to
+  dělá až synchronizace, kterou spouští sám `ATTR-RESYNC`. Dřívější
+  domněnka (že Block Editor existující vložení sám tiše přesynchronizuje)
+  byla mylná. `ATTR-RESYNC` teď vždy zálohuje čerstvý aktuální stav přímo
+  před synchronizací, takže funguje spolehlivě, i když mezi předěláním
+  bloku a spuštěním `ATTR-RESYNC` přibudou další vložení bloku –
+  `ATTR-SNAPSHOT` tedy před každým vložením spouštět nemusíš.
 
 - **`ATTR_RESYNC.lsp`: záloha teď přežije reload souboru i restart AutoCADu.**
   `*ar-last-block*`/zálohovaná data žila jen v paměti relace - jakýkoli
