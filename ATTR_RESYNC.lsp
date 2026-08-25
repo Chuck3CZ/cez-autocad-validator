@@ -46,8 +46,11 @@
 ;;      ne na text atributu), nebo zadej nazev bloku rucne.
 ;;   4. Pro kazdy novy atribut v sablone, ktery jeste zadne vlozeni nema,
 ;;      se skript zepta, jestli je to nahrada za nejaky stary (zruseny)
-;;      atribut, ze ktereho se ma prevzit text I POLOHU/FORMAT. Pokud
-;;      predtim probehl ATTR-SNAPSHOT, pouzije se zalohovany (predchozi)
+;;      atribut, ze ktereho se ma prevzit text I POLOHU/FORMAT. Odpovedet
+;;      lze CISLEM z nabidky (napr. "1") nebo presnym TAGem - cislo je
+;;      spolehlivejsi, protoze u presneho TAGu se pri jakemkoli preklepu
+;;      (napr. zkraceny nazev) cela nabidka pro dany atribut tise preskoci.
+;;      Pokud predtim probehl ATTR-SNAPSHOT, pouzije se zalohovany (predchozi)
 ;;      stav - jinak aktualni stav vlozeni v okamziku spusteni ATTR-RESYNC.
 ;;   5. Skript provede ATTSYNC + opravu poloh/hodnot pro VSECHNA vlozeni
 ;;      daneho bloku ve vykresu, vse v jedne UNDO skupine (jeden UNDO vse
@@ -110,7 +113,17 @@
 ;; se ma prevzit text. missing-new = tagy v sablone bez existujici hodnoty,
 ;; missing-old = stare tagy, ktere v nove sablone uz nejsou.
 ;; Vraci alist (novy-tag . stary-tag).
-(defun ar-ask-rename-map (missing-new missing-old / map avail newtag choice realtag)
+;; Sestavi cislovanou nabidku "1=tag1, 2=tag2, ..." z lst.
+(defun ar-numbered-list (lst / s n x)
+  (setq s "" n 0)
+  (foreach x lst
+    (setq n (1+ n))
+    (setq s (strcat s (if (= s "") "" ", ") (itoa n) "=" x))
+  )
+  s
+)
+
+(defun ar-ask-rename-map (missing-new missing-old / map avail newtag choice realtag idx)
   (setq map '() avail missing-old)
   (foreach newtag missing-new
     (if avail
@@ -120,23 +133,31 @@
         (setq choice
           (getstring T
             (strcat "\nNovy atribut '" newtag "' - je to nahrada za stary atribut? "
-                    "Zadej TAG stareho atributu [" (ar-join avail "/") "] "
+                    "Zadej CISLO nebo presny TAG stareho atributu [" (ar-numbered-list avail) "] "
                     "(Enter = preskocit, pouzije se vychozi hodnota ze sablony): ")
           )
         )
         ;; oriznout pripadne nechtene mezery na zacatku/konci (napr. z
-        ;; kopirovani/vkladani textu) a teprve pak porovnat bez ohledu na velikost pismen
-        (setq choice (strcase (vl-string-trim " \t" choice)))
+        ;; kopirovani/vkladani textu)
+        (setq choice (vl-string-trim " \t" choice))
         (if (/= choice "")
           (progn
-            (setq realtag (car (vl-remove-if-not '(lambda (x) (= (strcase x) choice)) avail)))
+            ;; nejdriv zkusit cislo z nabidky (odolne proti preklepu v dlouhem
+            ;; tagu), teprve pak presny TAG bez ohledu na velikost pismen
+            (setq idx (atoi choice))
+            (setq realtag
+              (if (and (> idx 0) (<= idx (length avail)))
+                (nth (1- idx) avail)
+                (car (vl-remove-if-not '(lambda (x) (= (strcase x) (strcase choice))) avail))
+              )
+            )
             (if realtag
               (progn
                 (setq map (cons (cons newtag realtag) map))
                 (setq avail (vl-remove realtag avail))
                 (princ (strcat "\n  [ATTR-RESYNC] OK: '" newtag "' <- '" realtag "' (prevezme hodnotu i polohu)."))
               )
-              (princ (strcat "\n  [ATTR-RESYNC] Tag '" choice "' nenalezen mezi nabidkou - preskoceno pro '" newtag "'."))
+              (princ (strcat "\n  [ATTR-RESYNC] '" choice "' nenalezen mezi nabidkou - preskoceno pro '" newtag "'."))
             )
           )
         )
@@ -445,5 +466,5 @@
   (princ)
 )
 
-(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.2) - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
+(princ "\n[ATTR-RESYNC] Nacten nastroj pro synchronizaci atributu predefinovanych bloku (v1.3) - prikazy: ATTR-SNAPSHOT, ATTR-RESYNC, ATTR-COPY, ATTR-PASTE")
 (princ)
